@@ -22,7 +22,7 @@ class ModelHandler:
                 n_batch=self.config['model_n_batch'],
             )
 
-    def generate(self, prompt, model_choice="llama"):
+    def generate_stream(self, prompt, model_choice="llama"):
         if model_choice == "llama":
             self.load_llama()
             model = self.llama_model
@@ -30,10 +30,11 @@ class ModelHandler:
             self.load_mistral()
             model = self.mistral_model
 
-        output = model(
+        for output in model(
             prompt,
             max_tokens=self.config['max_input_length'],
             stop=["Human:", "\n"],
-            echo=False
-        )
-        return output['choices'][0]['text']
+            echo=False,
+            stream=True
+        ):
+            yield output['choices'][0]['text']

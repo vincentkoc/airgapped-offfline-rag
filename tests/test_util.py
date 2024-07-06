@@ -12,7 +12,6 @@ def test_load_config(tmp_path, monkeypatch):
         "chunk_overlap": 200,
         "top_k": 3,
         "embedding_model": "sentence-transformers/all-MiniLM-L6-v2",
-        "use_fast_embed": True,
         "default_model": "llama",
         "max_input_length": 512
     }

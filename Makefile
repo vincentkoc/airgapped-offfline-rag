@@ -62,6 +62,11 @@ docker-run:
 	@docker run -p 8501:8501 diet-rag
 	@echo "Done."
 
+test:
+	@echo "Running tests..."
+	@pytest
+	@echo "Done."
+
 # Help
 help:
 	@echo "make venv - Set up virtual environment"
@@ -75,5 +80,6 @@ help:
 	@echo "make run - Run streamlit"
 	@echo "make docker-build - Build docker image"
 	@echo "make docker-run - Run docker image"
+	@echo "make test - Run tests"
 
-.PHONY: venv install get set load clean help precommit run docker-build docker-run
+.PHONY: venv install get set load clean help precommit run docker-build docker-run test

@@ -39,16 +39,25 @@ def process_documents(uploaded_files, rebuild=False):
         clear_vectorstore()
 
     documents = []
-    for file in uploaded_files:
-        file_path = os.path.join(DOCUMENTS_DIR, file.name)
-        with open(file_path, "wb") as f:
-            f.write(file.getvalue())
+    new_files = []
+    existing_files = set(f for f in os.listdir(DOCUMENTS_DIR) if f.endswith('.pdf'))
 
-        loader = PyPDFLoader(file_path)
-        docs = loader.load()
-        for doc in docs:
-            doc.metadata['source'] = file.name
-        documents.extend(docs)
+    for file in uploaded_files:
+        if file.name not in existing_files:
+            new_files.append(file)
+            file_path = os.path.join(DOCUMENTS_DIR, file.name)
+            with open(file_path, "wb") as f:
+                f.write(file.getvalue())
+
+            loader = PyPDFLoader(file_path)
+            docs = loader.load()
+            for doc in docs:
+                doc.metadata['source'] = file.name
+            documents.extend(docs)
+
+    if not documents and not rebuild:
+        logger.info("No new documents to process.")
+        return 0
 
     text_splitter = RecursiveCharacterTextSplitter(
         chunk_size=config['chunk_size'],
@@ -57,8 +66,9 @@ def process_documents(uploaded_files, rebuild=False):
     texts = text_splitter.split_documents(documents)
 
     vectorstore = get_vectorstore()
-    vectorstore.add_documents(texts)
-    vectorstore.persist()
+    if texts:
+        vectorstore.add_documents(texts)
+        vectorstore.persist()
 
     return len(texts)
 

@@ -8,20 +8,22 @@
 
 # Database requirements
 # ---------------------
-chromadb==0.4.3
+chromadb==0.5.3
 
 # Web requirements
 # ----------------
-streamlit==1.24.0
+streamlit==1.36.0
 
 # Project requirements
 # --------------------
-llama-cpp-python==0.2.11
-langchain==0.0.267
-sentence-transformers==2.2.2
-pyyaml==6.0
-pypdf==3.12.1
-tokenizers==0.13.3
-transformers==4.33.3
-fastembed==0.1.1
+llama-cpp-python==0.2.81
+langchain==0.2.6
+sentence-transformers==3.0.1
+pyyaml==6.0.1
+pypdf==4.2.0
+tokenizers==0.19.1
+transformers==4.42.3
+fastembed==0.3.3
 onnx==1.16.1
+onnxruntime==1.18.1
+huggingface-hub==0.23.4

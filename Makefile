@@ -15,7 +15,7 @@ venv:
 # Install pakacges
 install:
 	@echo "Installing requirements..."
-	@pip install -r requirements.txt
+	@pip install -r requirements-dev.txt
 	@echo "Done."
 
 # Get virtual environment

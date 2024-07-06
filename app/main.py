@@ -1,9 +1,14 @@
 import streamlit as st
-import yaml
-from document_processor import process_documents
-from model_handler import ModelHandler
-from rag import retrieve_context
-from utils import load_config
+import sys
+import os
+
+# Add the parent directory to the Python path
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
+from app.document_processor import process_documents
+from app.model_handler import ModelHandler
+from app.rag import retrieve_context
+from app.utils import load_config
 
 # Load configuration
 config = load_config()

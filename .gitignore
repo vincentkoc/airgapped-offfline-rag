@@ -433,3 +433,5 @@ celerybeat.pid
 *.lzf
 *.snappy
 report.[0-9]*.[0-9]*.[0-9]*.[0-9]*.json
+chroma_db*
+models/**

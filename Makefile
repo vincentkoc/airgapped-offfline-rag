@@ -49,7 +49,7 @@ precommit:
 
 run:
 	@echo "Running streamlit..."
-	@streamlit run app.py
+	@streamlit run app/main.py
 	@echo "Done."
 
 docker-build:

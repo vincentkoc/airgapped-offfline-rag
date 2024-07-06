@@ -64,7 +64,7 @@ def main():
     if not st.session_state.models_loaded:
         load_models()
         st.session_state.models_loaded = True
-        st.experimental_set_query_params(reload="true")
+        st.query_params(reload="true")
 
     if 'chat_enabled' not in st.session_state:
         st.session_state.chat_enabled = False

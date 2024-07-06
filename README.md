@@ -11,6 +11,7 @@ This project implements a Retrieval-Augmented Generation (RAG) based Question-An
    ```
    pyenv install 3.9.16
    pyenv local 3.9.16
+   pyenv rehash
    ```
 
 2. Create a virtual environment and install dependencies:
@@ -19,7 +20,9 @@ This project implements a Retrieval-Augmented Generation (RAG) based Question-An
    make setup
    ```
 
-3. Download the Llama 3 (8B) and Mistral (7B) models in GGUF format and place them in the `models/` directory.
+3. Download the Llama 3 (8B) and Mistral (7B) models in GGUF format and place them in the `models/` directory. `TheBloke` on Hugging Face has shared the models [here](https://huggingface.co/TheBloke):
+- https://huggingface.co/TheBloke/Mistral-7B-Instruct-v0.2-GGUF/blob/main/mistral-7b-instruct-v0.2.Q3_K_L.gguf
+- https://huggingface.co/TheBloke/LLaMA-Pro-8B-Instruct-GGUF/blob/main/llama-pro-8b-instruct.Q3_K_L.gguf
 
 ## Running the Application
 

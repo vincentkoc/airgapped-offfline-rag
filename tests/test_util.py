@@ -1,8 +1,8 @@
 import pytest
 import yaml
-from app.utils import load_config
+from app.utils import load_config, CONFIG_PATH
 
-def test_load_config(tmp_path):
+def test_load_config(tmp_path, monkeypatch):
     config_content = {
         "llama_model_path": "./models/llama-3-8b.gguf",
         "mistral_model_path": "./models/mistral-7b-v0.1.gguf",

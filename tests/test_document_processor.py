@@ -11,21 +11,24 @@ def mock_config():
         'embedding_model': 'test-model'
     }
 
-@patch('app.document_processor.load_config')
-def test_get_embedding_function(mock_load_config, mock_config):
-    mock_load_config.return_value = mock_config
+@patch('app.document_processor.config', new_callable=MagicMock)
+def test_get_embedding_function(mock_config):
     with patch('app.document_processor.TextEmbedding') as mock_fast_embed, \
          patch('app.document_processor.HuggingFaceEmbeddings') as mock_hf_embed:
 
         # Test with FastEmbed
-        mock_config['use_fast_embed'] = True
+        mock_config.__getitem__.return_value = True  # use_fast_embed
         embedding_func = get_embedding_function()
         assert isinstance(embedding_func, MagicMock)
         mock_fast_embed.assert_called_once()
         mock_hf_embed.assert_not_called()
 
+        # Reset mock calls
+        mock_fast_embed.reset_mock()
+        mock_hf_embed.reset_mock()
+
         # Test with HuggingFaceEmbeddings
-        mock_config['use_fast_embed'] = False
+        mock_config.__getitem__.side_effect = lambda key: False if key == 'use_fast_embed' else 'test-model'
         embedding_func = get_embedding_function()
         assert isinstance(embedding_func, MagicMock)
         mock_hf_embed.assert_called_once_with(model_name='test-model')
@@ -40,6 +43,7 @@ def test_process_documents(mock_get_embedding, mock_chroma, mock_splitter, mock_
     # Mock file and loader
     mock_file = MagicMock()
     mock_file.name = 'test.pdf'
+    mock_file.getvalue.return_value = b'mock pdf content'
     mock_loader.return_value.load.return_value = ['doc1', 'doc2']
 
     # Mock text splitter

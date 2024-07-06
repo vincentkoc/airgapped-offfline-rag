@@ -11,7 +11,9 @@ def mock_config():
         'embedding_model': 'test-model'
     }
 
-def test_get_embedding_function(mock_config):
+@patch('app.document_processor.load_config')
+def test_get_embedding_function(mock_load_config, mock_config):
+    mock_load_config.return_value = mock_config
     with patch('app.document_processor.TextEmbedding') as mock_fast_embed, \
          patch('app.document_processor.HuggingFaceEmbeddings') as mock_hf_embed:
 
@@ -28,11 +30,13 @@ def test_get_embedding_function(mock_config):
         assert isinstance(embedding_func, MagicMock)
         mock_hf_embed.assert_called_once_with(model_name='test-model')
 
+@patch('app.document_processor.load_config')
 @patch('app.document_processor.PyPDFLoader')
 @patch('app.document_processor.RecursiveCharacterTextSplitter')
 @patch('app.document_processor.Chroma')
 @patch('app.document_processor.get_embedding_function')
-def test_process_documents(mock_get_embedding, mock_chroma, mock_splitter, mock_loader, mock_config):
+def test_process_documents(mock_get_embedding, mock_chroma, mock_splitter, mock_loader, mock_load_config, mock_config):
+    mock_load_config.return_value = mock_config
     # Mock file and loader
     mock_file = MagicMock()
     mock_file.name = 'test.pdf'

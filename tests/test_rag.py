@@ -10,7 +10,9 @@ def mock_config():
         'top_k': 3
     }
 
-def test_get_embedding_function(mock_config):
+@patch('app.rag.load_config')
+def test_get_embedding_function(mock_load_config, mock_config):
+    mock_load_config.return_value = mock_config
     with patch('app.rag.TextEmbedding') as mock_fast_embed, \
          patch('app.rag.HuggingFaceEmbeddings') as mock_hf_embed:
 
@@ -27,9 +29,11 @@ def test_get_embedding_function(mock_config):
         assert isinstance(embedding_func, MagicMock)
         mock_hf_embed.assert_called_once_with(model_name='test-model')
 
+@patch('app.rag.load_config')
 @patch('app.rag.Chroma')
 @patch('app.rag.get_embedding_function')
-def test_retrieve_context(mock_get_embedding, mock_chroma, mock_config):
+def test_retrieve_context(mock_get_embedding, mock_chroma, mock_load_config, mock_config):
+    mock_load_config.return_value = mock_config
     # Mock Chroma and its methods
     mock_vectorstore = MagicMock()
     mock_chroma.return_value = mock_vectorstore

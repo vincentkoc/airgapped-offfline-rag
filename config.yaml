@@ -1,0 +1,14 @@
+# Model Settings
+llama_model_path: "./models/llama-pro-8b-instruct.Q3_K_L.gguf"
+mistral_model_path: "./models/mistral-7b-instruct-v0.2.Q3_K_L.gguf"
+model_n_ctx: 2048
+model_n_batch: 512
+
+# RAG Settings
+chunk_size: 1000
+chunk_overlap: 200
+top_k: 3
+
+# App Settings
+default_model: "mistral"  # or "llama"
+max_input_length: 512

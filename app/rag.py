@@ -1,6 +1,7 @@
 from langchain_community.vectorstores import Chroma
-from fastembed import TextEmbedding
+from langchain_community.embeddings.fastembed import FastEmbedEmbeddings
 from .utils import load_config
+from .document_processor import get_embedding_function, get_vectorstore
 import streamlit as st
 import logging
 
@@ -13,11 +14,11 @@ logger = logging.getLogger(__name__)
 @st.cache_resource
 def get_embedding_function():
     try:
-        # Use a default supported model
-        model_name = "sentence-transformers/all-MiniLM-L6-v2"
-
-        logger.info(f"Using embedding model: {model_name}")
-        return TextEmbedding(model_name)
+        return FastEmbedEmbeddings(
+            model_name=config['embedding_model'],
+            max_length=512,
+            doc_embed_type="passage"
+        )
     except Exception as e:
         logger.error(f"Error loading embedding model: {str(e)}")
         st.error(f"Error loading embedding model: {str(e)}")
@@ -30,10 +31,7 @@ def retrieve_context(query, top_k=3):
         return ""
 
     try:
-        vectorstore = Chroma(
-            persist_directory="./chroma_db",
-            embedding_function=embeddings
-        )
+        vectorstore = get_vectorstore()
 
         # Log the number of documents in the vectorstore
         logger.info(f"Number of documents in vectorstore: {vectorstore._collection.count()}")

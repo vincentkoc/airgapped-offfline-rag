@@ -1,18 +1,18 @@
 # Model Settings
-llama_model_path: "./models/llama-pro-8b-instruct.Q3_K_L.gguf"
-mistral_model_path: "./models/mistral-7b-instruct-v0.2.Q3_K_L.gguf"
-model_n_ctx: 2048
-model_n_batch: 512
+llama_model_path: ${LLAMA_MODEL_PATH:-"./models/llama-pro-8b-instruct.Q3_K_L.gguf"}
+mistral_model_path: ${MISTRAL_MODEL_PATH:-"./models/mistral-7b-instruct-v0.2.Q3_K_L.gguf"}
+model_n_ctx: ${MODEL_N_CTX:-2048}
+model_n_batch: ${MODEL_N_BATCH:-512}
 
 # RAG Settings
-chunk_size: 1000
-chunk_overlap: 200
-top_k: 3
+chunk_size: ${CHUNK_SIZE:-1000}
+chunk_overlap: ${CHUNK_OVERLAP:-200}
+top_k: ${TOP_K:-3}
 
 # Embedding Settings
-use_fast_embed: True
-embedding_model: "sentence-transformers/all-MiniLM-L6-v2"
+use_fast_embed: ${USE_FAST_EMBED:-true}
+embedding_model: ${EMBEDDING_MODEL:-"sentence-transformers/all-MiniLM-L6-v2"} # fallback
 
 # App Settings
-default_model: "mistral"  # or "llama"
-max_input_length: 512
+default_model: ${DEFAULT_MODEL:-"mistral"} # or "llama"
+max_input_length: ${MAX_INPUT_LENGTH:-512}

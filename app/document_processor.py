@@ -6,8 +6,10 @@ import os
 import shutil
 from .utils import load_config
 import streamlit as st
+import logging
 
 config = load_config()
+logger = logging.getLogger(__name__)
 
 @st.cache_resource
 def get_embedding_function():
@@ -15,19 +17,35 @@ def get_embedding_function():
         return FastEmbedEmbeddings(
             model_name=config['embedding_model'],
             max_length=512,
-            doc_embed_type="passage"
+            doc_embed_type="passage",
+            cache_dir="./models"
         )
     except Exception as e:
+        logger.error(f"Error loading embedding model: {str(e)}")
         st.error(f"Error loading embedding model: {str(e)}")
-        st.info("Using fallback embedding method.")
         from langchain_community.embeddings import HuggingFaceEmbeddings
-        return HuggingFaceEmbeddings()
+        return HuggingFaceEmbeddings(cache_folder="./models")
+
+def initialize_chroma(embeddings):
+    try:
+        return Chroma(persist_directory="./chroma_db", embedding_function=embeddings)
+    except Exception as e:
+        logger.error(f"Error initializing Chroma: {str(e)}")
+        st.error(f"Error initializing Chroma: {str(e)}")
+        return clear_and_reinitialize_chroma(embeddings)
+
+def clear_and_reinitialize_chroma(embeddings):
+    try:
+        clear_vectorstore()
+        return Chroma(persist_directory="./chroma_db", embedding_function=embeddings)
+    except Exception as e:
+        logger.error(f"Failed to reinitialize Chroma after clearing vectorstore: {str(e)}")
+        st.error(f"Failed to reinitialize Chroma after clearing vectorstore: {str(e)}")
+        return None
 
 def process_documents(uploaded_files, rebuild=False):
     if rebuild:
-        # Remove existing Chroma database
-        if os.path.exists("./chroma_db"):
-            shutil.rmtree("./chroma_db")
+        clear_vectorstore()
 
     documents = []
     for file in uploaded_files:
@@ -36,7 +54,6 @@ def process_documents(uploaded_files, rebuild=False):
             temp_file.write(file.getvalue())
         loader = PyPDFLoader(temp_file_path)
         docs = loader.load()
-        # Update the metadata with the correct filename
         for doc in docs:
             doc.metadata['source'] = file.name
         documents.extend(docs)
@@ -50,11 +67,8 @@ def process_documents(uploaded_files, rebuild=False):
 
     embeddings = get_embedding_function()
 
-    vectorstore = Chroma.from_documents(
-        texts,
-        embeddings,
-        persist_directory="./chroma_db"
-    )
+    vectorstore = Chroma.from_documents(texts, embeddings, persist_directory="./chroma_db")
+    vectorstore.persist()
 
     return len(texts)
 
@@ -66,12 +80,17 @@ def get_existing_documents():
             docs = vectorstore.get()
             unique_sources = set(metadata['source'] for metadata in docs['metadatas'])
             return list(unique_sources)
+        else:
+            return []
     except Exception as e:
+        logger.error(f"Error retrieving existing documents: {str(e)}")
         st.error(f"Error retrieving existing documents: {str(e)}")
-    return []
+        return []
 
 def clear_vectorstore():
     if os.path.exists("./chroma_db"):
         shutil.rmtree("./chroma_db")
+        logger.info("Cleared Chroma vectorstore.")
         return True
+    logger.info("Chroma vectorstore not found. No need to clear.")
     return False

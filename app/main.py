@@ -1,14 +1,16 @@
 import streamlit as st
 import sys
 import os
-from typing import List
 import logging
-import argparse
+from concurrent.futures import ThreadPoolExecutor, as_completed
+
+# Set page config at the very beginning
+st.set_page_config(layout="wide", page_title="Document QnA System")
 
 # Add the parent directory to the Python path
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from app.document_processor import process_documents, get_existing_documents, clear_vectorstore
+from app.document_processor import process_documents, get_existing_documents, clear_vectorstore, get_embedding_function
 from app.model_handler import ModelHandler
 from app.rag import retrieve_context
 from app.utils import load_config
@@ -17,128 +19,183 @@ from app.utils import load_config
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-# Parse command-line arguments
-parser = argparse.ArgumentParser(description="Document QnA System")
-parser.add_argument("--debug", action="store_true", help="Enable debug mode")
-args = parser.parse_args()
-
 # Load configuration
 config = load_config()
 
-# Initialize ModelHandler
 @st.cache_resource
 def get_model_handler():
-    return ModelHandler(config)
+    handler = ModelHandler(config)
+    handler.check_available_models()  # Ensure this method is called during initialization
+    return handler
 
-model_handler = get_model_handler()
+def load_models():
+    with st.spinner("Loading models... This may take a few minutes."):
+        # Load embedding model
+        embedding_model = get_embedding_function()
 
-st.title("Document QnA System")
+        # Load LLM models
+        model_handler = get_model_handler()
 
-# Sidebar
-st.sidebar.title("Settings")
+        # Trigger model loading in parallel
+        with ThreadPoolExecutor() as executor:
+            futures = []
+            if "Llama 3" in model_handler.available_models:
+                futures.append(executor.submit(model_handler.load_llama))
+            if "Mistral" in model_handler.available_models:
+                futures.append(executor.submit(model_handler.load_mistral))
 
-# File uploader in sidebar
-uploaded_files = st.sidebar.file_uploader("Upload PDF documents", accept_multiple_files=True, type=['pdf'])
+            for future in as_completed(futures):
+                try:
+                    future.result()
+                except Exception as e:
+                    st.error(f"Error loading model: {str(e)}")
 
-# Get existing documents
-try:
+    if not model_handler.available_models:
+        st.error("No models are available. Please check your configuration and model files.")
+    else:
+        st.success(f"Models loaded successfully! Available models: {', '.join(model_handler.available_models)}")
+
+def main():
+    st.title("Document QnA System")
+
+    if 'models_loaded' not in st.session_state:
+        st.session_state.models_loaded = False
+
+    if not st.session_state.models_loaded:
+        load_models()
+        st.session_state.models_loaded = True
+        st.experimental_set_query_params(reload="true")
+
+    if 'chat_enabled' not in st.session_state:
+        st.session_state.chat_enabled = False
+
+    if 'messages' not in st.session_state:
+        st.session_state.messages = []
+
+    col1, col2 = st.columns([1, 2])
+
+    with col1:
+        settings_section()
+
+    with col2:
+        chat_interface()
+
+def settings_section():
+    st.subheader("Settings")
+
+    uploaded_files = st.file_uploader("Upload PDF documents", accept_multiple_files=True, type=['pdf'])
+
     existing_docs = get_existing_documents()
     if existing_docs:
-        st.sidebar.write("Existing documents:")
+        st.write("Existing documents:")
         for doc in existing_docs:
-            st.sidebar.write(f"- {doc}")
-
-        if st.sidebar.button("Clear Vector Store"):
-            if clear_vectorstore():
-                st.sidebar.success("Vector store cleared successfully.")
-                st.experimental_rerun()
-            else:
-                st.sidebar.error("Failed to clear vector store.")
+            st.write(f"- {doc}")
     else:
-        st.sidebar.write("No existing documents found.")
-except Exception as e:
-    logger.error(f"Error loading existing documents: {str(e)}")
-    st.sidebar.error(f"Error loading existing documents: {str(e)}")
+        st.write("No existing documents found.")
 
-if uploaded_files:
-    rebuild = st.sidebar.checkbox("Rebuild Vector Store", value=False)
-    if st.sidebar.button("Process Documents"):
-        with st.spinner("Processing documents..."):
-            try:
-                num_chunks = process_documents(uploaded_files, rebuild)
-                st.sidebar.success(f"Processed {num_chunks} chunks from {len(uploaded_files)} documents")
-                st.experimental_rerun()
-            except Exception as e:
-                logger.error(f"Error processing documents: {str(e)}")
-                st.sidebar.error(f"Error processing documents: {str(e)}")
+    model_handler = get_model_handler()
+    if model_handler.available_models:
+        model_choice = st.selectbox("Choose a model", model_handler.available_models)
+        st.session_state.model_choice = model_choice
+    else:
+        st.error("No models available. Please check your configuration and model files.")
+        return
 
-# Model selection
-model_choice = st.sidebar.selectbox("Choose a model", ["Llama 3", "Mistral"], index=0 if config['default_model'] == 'llama' else 1)
+    debug_mode = st.checkbox("Debug Mode")
+    st.session_state.debug_mode = debug_mode
 
-# Debug mode
-debug_mode = st.sidebar.checkbox("Debug Mode") or args.debug
+    use_rag = st.checkbox("Use RAG", value=True)
+    st.session_state.use_rag = use_rag
 
-# Use RAG
-use_rag = st.sidebar.checkbox("Use RAG", value=True)
-
-# Main chat interface
-st.header("Chat Interface")
-
-# Initialize chat history
-if "messages" not in st.session_state:
-    st.session_state.messages = []
-
-# Display chat messages
-for message in st.session_state.messages:
-    with st.chat_message(message["role"]):
-        st.markdown(message["content"])
-
-# Chat input
-if prompt := st.chat_input("What is your question?"):
-    st.session_state.messages.append({"role": "user", "content": prompt})
-    with st.chat_message("user"):
-        st.markdown(prompt)
-
-    with st.chat_message("assistant"):
-        message_placeholder = st.empty()
-        full_response = ""
-
-        # Retrieve context if using RAG
-        if use_rag:
-            try:
-                context = retrieve_context(prompt, top_k=config['top_k'])
-                if debug_mode:
-                    logger.info(f"RAG Context: {context}")
-                    st.write("RAG Context:")
-                    st.write(context)
-            except Exception as e:
-                logger.error(f"Error retrieving context: {str(e)}")
-                st.error(f"Error retrieving context: {str(e)}")
-                context = ""
+    if st.button("Run"):
+        if uploaded_files or existing_docs:
+            process_and_enable_chat(uploaded_files)
+        elif use_rag:
+            st.warning("No documents found. Please upload documents to use RAG or disable RAG.")
         else:
-            context = ""
+            st.success("Chat enabled without RAG.")
+            st.session_state.chat_enabled = True
 
-        # Generate response
-        prompt_template = f"Context: {context}\n\nHuman: {prompt}\n\nAssistant:"
-
+def process_and_enable_chat(uploaded_files):
+    with st.spinner("Processing documents..."):
         try:
-            for chunk in model_handler.generate_stream(prompt_template, "llama" if model_choice == "Llama 3" else "mistral"):
-                full_response += chunk
-                message_placeholder.markdown(full_response + "▌")
-            message_placeholder.markdown(full_response)
+            num_chunks = process_documents(uploaded_files, rebuild=True)
+            st.success(f"Processed {num_chunks} chunks from {len(uploaded_files) + len(get_existing_documents())} documents")
+            st.session_state.chat_enabled = True
         except Exception as e:
-            logger.error(f"Error generating response: {str(e)}")
-            st.error(f"Error generating response: {str(e)}")
-            full_response = "I apologize, but I encountered an error while generating the response."
+            logger.error(f"Error processing documents: {str(e)}")
+            st.error(f"Error processing documents: {str(e)}")
+            st.warning("Trying to reinitialize the database...")
+            try:
+                clear_vectorstore()
+                num_chunks = process_documents(uploaded_files, rebuild=True)
+                st.success(f"Reinitialized and processed {num_chunks} chunks from {len(uploaded_files)} documents")
+                st.session_state.chat_enabled = True
+            except Exception as e:
+                logger.error(f"Failed to reinitialize the database: {str(e)}")
+                st.error(f"Failed to reinitialize the database: {str(e)}")
 
-    st.session_state.messages.append({"role": "assistant", "content": full_response})
+def chat_interface():
+    st.subheader("Chat Interface")
 
-# About section in sidebar
-st.sidebar.title("About")
-st.sidebar.info("This is a RAG-based Document QnA system. Upload PDF documents and ask questions about their content.")
-if os.path.exists("./chroma_db"):
-    st.sidebar.info(f"RAG database: {os.path.abspath('./chroma_db')}")
+    for message in st.session_state.messages:
+        with st.chat_message(message["role"]):
+            st.markdown(message["content"])
 
-if debug_mode:
-    logger.info("Debug mode is enabled")
-    st.sidebar.write("Debug mode is enabled")
+    if st.session_state.chat_enabled or not st.session_state.use_rag:
+        handle_chat_input()
+    elif not st.session_state.use_rag:
+        st.info("RAG is disabled. You can start chatting without document context.")
+    else:
+        st.info("Please process documents or disable RAG to start chatting.")
+
+def handle_chat_input():
+    if prompt := st.chat_input("What is your question?"):
+        st.session_state.messages.append({"role": "user", "content": prompt})
+        with st.chat_message("user"):
+            st.markdown(prompt)
+
+        with st.chat_message("assistant"):
+            message_placeholder = st.empty()
+            full_response = ""
+
+            if st.session_state.use_rag:
+                context = get_rag_context(prompt)
+            else:
+                context = ""
+
+            prompt_template = f"Context: {context}\n\nHuman: {prompt}\n\nAssistant:"
+
+            if st.session_state.debug_mode:
+                with st.expander("LLM Prompt"):
+                    st.code(prompt_template)
+
+            try:
+                model_handler = get_model_handler()
+                for chunk in model_handler.generate_stream(prompt_template, st.session_state.model_choice):
+                    full_response += chunk
+                    message_placeholder.markdown(full_response + "▌")
+                message_placeholder.markdown(full_response)
+            except Exception as e:
+                logger.error(f"Error generating response: {str(e)}")
+                st.error(f"Error generating response: {str(e)}")
+                full_response = "I apologize, but I encountered an error while generating the response."
+
+        st.session_state.messages.append({"role": "assistant", "content": full_response})
+
+def get_rag_context(prompt):
+    try:
+        context = retrieve_context(prompt, top_k=config['top_k'])
+        if st.session_state.debug_mode:
+            logger.info(f"RAG Context: {context}")
+            with st.expander("RAG Debug Information"):
+                st.write("RAG Context:")
+                st.code(context)
+        return context
+    except Exception as e:
+        logger.error(f"Error retrieving context: {str(e)}")
+        st.error(f"Error retrieving context: {str(e)}")
+        return ""
+
+if __name__ == "__main__":
+    main()

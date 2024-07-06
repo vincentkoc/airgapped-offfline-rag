@@ -1,6 +1,7 @@
 from langchain_community.vectorstores import Chroma
 from langchain_community.embeddings.fastembed import FastEmbedEmbeddings
 from .utils import load_config
+from .document_processor import initialize_chroma
 import streamlit as st
 import logging
 
@@ -47,4 +48,5 @@ def retrieve_context(query, top_k=3):
         return context
     except Exception as e:
         logger.error(f"Error retrieving context: {str(e)}")
+        st.error(f"Error retrieving context: {str(e)}")
         return ""

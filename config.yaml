@@ -6,12 +6,12 @@ model_n_batch: ${MODEL_N_BATCH:-512}
 
 # RAG Settings
 chunk_size: ${CHUNK_SIZE:-1000}
-chunk_overlap: ${CHUNK_OVERLAP:-200}
+chunk_overlap: ${CHUNK_OVERLAP:-100}
 top_k: ${TOP_K:-3}
 
 # Embedding Settings
 use_fast_embed: ${USE_FAST_EMBED:-true}
-embedding_model: ${EMBEDDING_MODEL:-"sentence-transformers/all-MiniLM-L6-v2"} # fallback
+embedding_model: ${EMBEDDING_MODEL:-"sentence-transformers/all-MiniLM-L6-v2"}
 
 # App Settings
 default_model: ${DEFAULT_MODEL:-"mistral"} # or "llama"

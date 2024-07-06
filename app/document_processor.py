@@ -39,62 +39,62 @@ def process_documents(uploaded_files, rebuild=False):
         clear_vectorstore()
 
     documents = []
-    new_files = []
-    existing_files = set(f for f in os.listdir(DOCUMENTS_DIR) if f.endswith('.pdf'))
-
     for file in uploaded_files:
-        if file.name not in existing_files:
-            new_files.append(file)
-            file_path = os.path.join(DOCUMENTS_DIR, file.name)
-            with open(file_path, "wb") as f:
-                f.write(file.getvalue())
+        file_path = os.path.join(DOCUMENTS_DIR, file.name)
+        with open(file_path, "wb") as f:
+            f.write(file.getvalue())
 
-            loader = PyPDFLoader(file_path)
-            docs = loader.load()
-            for doc in docs:
-                doc.metadata['source'] = file.name
-            documents.extend(docs)
+        loader = PyPDFLoader(file_path)
+        docs = loader.load()
+        logger.info(f"Loaded {len(docs)} pages from {file.name}")
+        for doc in docs:
+            doc.metadata['source'] = file.name
+        documents.extend(docs)
 
-    if not documents and not rebuild:
-        logger.info("No new documents to process.")
+    if not documents:
+        logger.warning("No documents were loaded.")
         return 0
 
+    chunk_size = int(config['chunk_size'])
+    chunk_overlap = min(int(config['chunk_overlap']), chunk_size - 1)
+
     text_splitter = RecursiveCharacterTextSplitter(
-        chunk_size=config['chunk_size'],
-        chunk_overlap=config['chunk_overlap']
+        chunk_size=chunk_size,
+        chunk_overlap=chunk_overlap
     )
     texts = text_splitter.split_documents(documents)
+    logger.info(f"Split documents into {len(texts)} chunks")
+
+    if not texts:
+        logger.warning("No text chunks were created after splitting.")
+        return 0
 
     vectorstore = get_vectorstore()
-    if texts:
+    try:
         vectorstore.add_documents(texts)
         vectorstore.persist()
+        logger.info(f"Added {len(texts)} chunks to the vector store")
+    except Exception as e:
+        logger.error(f"Error adding documents to vector store: {str(e)}")
+        raise
 
     return len(texts)
 
 def get_existing_documents():
     try:
         vectorstore = get_vectorstore()
+        docs = vectorstore.get()
+        stored_docs = set(metadata['source'] for metadata in docs['metadatas'])
 
-        # Get all documents from the vectorstore
-        all_docs = vectorstore.get()
+        existing_docs = set(f for f in os.listdir(DOCUMENTS_DIR) if f.endswith('.pdf'))
 
-        # Check which documents actually exist in the file system
-        existing_files = set(f for f in os.listdir(DOCUMENTS_DIR) if f.endswith('.pdf'))
-
-        # Filter out documents that no longer exist in the file system
-        existing_docs = [
-            doc for doc, metadata in zip(all_docs['documents'], all_docs['metadatas'])
-            if metadata['source'] in existing_files
-        ]
-
-        # Update the vectorstore to remove documents that no longer exist
-        if len(existing_docs) != len(all_docs['documents']):
-            vectorstore.delete(ids=[id for id, metadata in zip(all_docs['ids'], all_docs['metadatas'])
-                                    if metadata['source'] not in existing_files])
+        docs_to_remove = stored_docs - existing_docs
+        if docs_to_remove:
+            for doc in docs_to_remove:
+                vectorstore.delete(where={"source": doc})
             vectorstore.persist()
 
-        return list(existing_files)
+        return list(existing_docs)
     except Exception as e:
         logger.error(f"Error retrieving existing documents: {str(e)}")
         st.error(f"Error retrieving existing documents: {str(e)}")
@@ -104,10 +104,8 @@ def clear_vectorstore():
     if os.path.exists("./chroma_db"):
         shutil.rmtree("./chroma_db")
         logger.info("Cleared Chroma vectorstore.")
-        # Clear the cached vectorstore
         get_vectorstore.clear()
 
-    # Remove all files from the documents directory
     for file in os.listdir(DOCUMENTS_DIR):
         file_path = os.path.join(DOCUMENTS_DIR, file)
         if os.path.isfile(file_path):
@@ -122,14 +120,9 @@ def remove_document(document_name):
         os.remove(file_path)
         logger.info(f"Removed document: {document_name}")
 
-        # Remove the document from the vectorstore
         vectorstore = get_vectorstore()
-        all_docs = vectorstore.get()
-        ids_to_delete = [id for id, metadata in zip(all_docs['ids'], all_docs['metadatas'])
-                         if metadata['source'] == document_name]
-        if ids_to_delete:
-            vectorstore.delete(ids=ids_to_delete)
-            vectorstore.persist()
+        vectorstore.delete(where={"source": document_name})
+        vectorstore.persist()
 
         return True
     else:

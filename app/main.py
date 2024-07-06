@@ -2,6 +2,7 @@ import streamlit as st
 import sys
 import os
 import logging
+import io
 import time
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
@@ -11,7 +12,7 @@ st.set_page_config(layout="wide", page_title="Document QnA System")
 # Add the parent directory to the Python path
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from app.document_processor import process_documents, get_existing_documents, clear_vectorstore, remove_document, get_embedding_function
+from app.document_processor import process_documents, get_existing_documents, clear_vectorstore, get_embedding_function
 from app.model_handler import ModelHandler
 from app.rag import retrieve_context
 from app.utils import load_config
@@ -41,18 +42,21 @@ def load_models():
 def main():
     st.title("Document QnA System")
 
+    # Initialize session state variables
     if 'models_loaded' not in st.session_state:
         st.session_state.models_loaded = False
+    if 'chat_enabled' not in st.session_state:
+        st.session_state.chat_enabled = False
+    if 'messages' not in st.session_state:
+        st.session_state.messages = []
+    if 'use_rag' not in st.session_state:
+        st.session_state.use_rag = True
+    if 'debug_mode' not in st.session_state:
+        st.session_state.debug_mode = False
 
     if not st.session_state.models_loaded:
         load_models()
         st.session_state.models_loaded = True
-
-    if 'chat_enabled' not in st.session_state:
-        st.session_state.chat_enabled = False
-
-    if 'messages' not in st.session_state:
-        st.session_state.messages = []
 
     col1, col2 = st.columns([1, 2])
 
@@ -71,6 +75,7 @@ def settings_section():
     if existing_docs:
         st.write("Existing documents:")
         for doc in existing_docs:
+            # st.write(f"- {doc}")
             col1, col2 = st.columns([3, 1])
             with col1:
                 st.write(f"- {doc}")
@@ -93,37 +98,50 @@ def settings_section():
         st.error("No models available. Please check your configuration and model files.")
         return
 
-    debug_mode = st.checkbox("Debug Mode")
-    st.session_state.debug_mode = debug_mode
-
-    use_rag = st.checkbox("Use RAG", value=True)
-    st.session_state.use_rag = use_rag
+    st.session_state.debug_mode = st.checkbox("Debug Mode")
+    st.session_state.use_rag = st.checkbox("Use RAG", value=True)
 
     if st.button("Process Documents"):
         if uploaded_files or existing_docs:
             process_and_enable_chat(uploaded_files)
-        elif use_rag:
+        elif st.session_state.use_rag:
             st.warning("No documents found. Please upload documents to use RAG or disable RAG.")
         else:
             st.success("Chat enabled without RAG.")
             st.session_state.chat_enabled = True
 
-
 def process_and_enable_chat(uploaded_files):
     with st.spinner("Processing documents..."):
         try:
+            log_capture = io.StringIO()
+            log_handler = logging.StreamHandler(log_capture)
+            logger.addHandler(log_handler)
+
             num_chunks = process_documents(uploaded_files)
+
+            logger.removeHandler(log_handler)
+            log_contents = log_capture.getvalue()
+
             if num_chunks > 0:
                 st.success(f"Processed {num_chunks} chunks from {len(uploaded_files)} documents")
+                st.session_state.chat_enabled = True
             else:
                 st.info("No new documents to process.")
+                # st.warning("No chunks were processed. Please check your documents.")
+
+            with st.expander("Processing Logs"):
+                st.text(log_contents)
             st.session_state.chat_enabled = True
         except Exception as e:
             logger.error(f"Error processing documents: {str(e)}")
             st.error(f"Error processing documents: {str(e)}")
+            st.session_state.chat_enabled = False
 
 def chat_interface():
     st.subheader("Chat Interface")
+    # alert=st.success("Chat enabled")
+    # time.sleep(2)
+    # alert.empty()
 
     for message in st.session_state.messages:
         with st.chat_message(message["role"]):
@@ -164,6 +182,7 @@ def handle_chat_input():
                     message_placeholder.markdown(full_response + "▌")
                 message_placeholder.markdown(full_response)
             except Exception as e:
+                logger.error(f"Error generating response: {str(e)}")
                 st.error(f"Error generating response: {str(e)}")
                 full_response = "I apologize, but I encountered an error while generating the response."
 

@@ -53,8 +53,8 @@ ENV CUDA_VISIBLE_DEVICES=all
 ENV LD_LIBRARY_PATH=/usr/local/lib:$LD_LIBRARY_PATH
 
 # Create a non-root user
-RUN useradd -m myuser
-USER myuser
+# RUN useradd -m myuser
+# USER myuser
 
 # Expose Streamlit port (this is just a documentation, it doesn't actually publish the port)
 EXPOSE 8501

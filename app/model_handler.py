@@ -45,8 +45,10 @@ class ModelHandler:
         else:
             raise ValueError(f"Model {model_choice} is not available. Available models: {', '.join(self.available_models)}")
 
-    def generate_stream(self, prompt, model_choice="Llama 3"):
+    def generate_stream(self, prompt, model_choice="Mistral"):
         model = self.get_model(model_choice)
+
+        print(prompt)
 
         for output in model(
             prompt,

@@ -25,38 +25,18 @@ config = load_config()
 
 @st.cache_resource
 def get_model_handler():
-    handler = ModelHandler(config)
-    handler.check_available_models()  # Ensure this method is called during initialization
-    return handler
+    return ModelHandler(config)
 
 def load_models():
     with st.spinner("Loading models... This may take a few minutes."):
-        # Load embedding model
-        embedding_model = get_embedding_function()
-
-        # Load LLM models
         model_handler = get_model_handler()
 
-        # Trigger model loading in parallel
-        with ThreadPoolExecutor() as executor:
-            futures = []
-            if "Llama 3" in model_handler.available_models:
-                futures.append(executor.submit(model_handler.load_llama))
-            if "Mistral" in model_handler.available_models:
-                futures.append(executor.submit(model_handler.load_mistral))
-
-            for future in as_completed(futures):
-                try:
-                    future.result()
-                except Exception as e:
-                    st.error(f"Error loading model: {str(e)}")
-
-    if not model_handler.available_models:
-        st.error("No models are available. Please check your configuration and model files.")
-    else:
-        alert = st.success(f"Models loaded successfully! Available models: {', '.join(model_handler.available_models)}")
-        time.sleep(2) # Wait
-        alert.empty() # Clear the alert
+        if not model_handler.available_models:
+            st.error("No models are available. Please check your configuration and model files.")
+        else:
+            alert = st.success(f"Models loaded successfully! Available models: {', '.join(model_handler.available_models)}")
+            time.sleep(2) # Wait
+            alert.empty() # Clear the alert
 
 def main():
     st.title("Document QnA System")
@@ -67,8 +47,6 @@ def main():
     if not st.session_state.models_loaded:
         load_models()
         st.session_state.models_loaded = True
-        st.query_params["reload"]="true"
-
 
     if 'chat_enabled' not in st.session_state:
         st.session_state.chat_enabled = False
@@ -97,7 +75,8 @@ def settings_section():
             with col1:
                 st.write(f"- {doc}")
             with col2:
-                if st.button(f"Remove {doc}", key=f"remove_{doc}"):
+                if st.button(f"Remove", key=f"remove_{doc}"):
+                # if st.button(f"Remove {doc}", key=f"remove_{doc}"):
                     if remove_document(doc):
                         st.success(f"Removed {doc}")
                         st.experimental_rerun()
@@ -134,7 +113,10 @@ def process_and_enable_chat(uploaded_files):
     with st.spinner("Processing documents..."):
         try:
             num_chunks = process_documents(uploaded_files)
-            st.success(f"Processed {num_chunks} chunks from {len(uploaded_files) + len(get_existing_documents())} documents")
+            if num_chunks > 0:
+                st.success(f"Processed {num_chunks} chunks from {len(uploaded_files)} documents")
+            else:
+                st.info("No new documents to process.")
             st.session_state.chat_enabled = True
         except Exception as e:
             logger.error(f"Error processing documents: {str(e)}")
@@ -182,7 +164,6 @@ def handle_chat_input():
                     message_placeholder.markdown(full_response + "▌")
                 message_placeholder.markdown(full_response)
             except Exception as e:
-                logger.error(f"Error generating response: {str(e)}")
                 st.error(f"Error generating response: {str(e)}")
                 full_response = "I apologize, but I encountered an error while generating the response."
 

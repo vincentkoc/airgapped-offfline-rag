@@ -9,6 +9,10 @@ chunk_size: 1000
 chunk_overlap: 200
 top_k: 3
 
+# Embedding Settings
+use_fast_embed: True
+embedding_model: "sentence-transformers/all-MiniLM-L6-v2"
+
 # App Settings
 default_model: "mistral"  # or "llama"
 max_input_length: 512

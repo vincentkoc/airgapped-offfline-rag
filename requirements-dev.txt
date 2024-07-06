@@ -2,6 +2,7 @@
 -r requirements.txt
 
 # Local development only libraries
+pytest
 pre-commit
 flake8
 isort

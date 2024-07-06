@@ -21,3 +21,4 @@ langchain==0.0.267
 sentence-transformers==2.2.2
 pyyaml==6.0
 pypdf==3.12.1
+fastembed==0.1.1

@@ -52,7 +52,7 @@ class ModelHandler:
 
         for output in model(
             prompt,
-            max_tokens=self.config['max_input_length'],
+            max_tokens=int(self.config['max_input_length']),
             stop=["Human:", "\n"],
             echo=False,
             stream=True

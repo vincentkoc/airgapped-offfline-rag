@@ -1,7 +1,5 @@
-from langchain_community.vectorstores import Chroma
-from langchain_community.embeddings.fastembed import FastEmbedEmbeddings
 from .utils import load_config
-from .document_processor import initialize_chroma, get_embedding_function
+from .document_processor import get_vectorstore
 import streamlit as st
 import logging
 
@@ -12,13 +10,8 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 def retrieve_context(query, top_k=3):
-    embeddings = get_embedding_function()
-    if embeddings is None:
-        logger.error("Failed to initialize embeddings.")
-        return ""
-
     try:
-        vectorstore = initialize_chroma(embeddings)
+        vectorstore = get_vectorstore()
 
         # Log the number of documents in the vectorstore
         logger.info(f"Number of documents in vectorstore: {vectorstore._collection.count()}")

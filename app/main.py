@@ -11,7 +11,7 @@ st.set_page_config(layout="wide", page_title="Document QnA System")
 # Add the parent directory to the Python path
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from app.document_processor import process_documents, get_existing_documents, clear_vectorstore, get_embedding_function
+from app.document_processor import process_documents, get_existing_documents, clear_vectorstore, remove_document, get_embedding_function
 from app.model_handler import ModelHandler
 from app.rag import retrieve_context
 from app.utils import load_config
@@ -93,7 +93,16 @@ def settings_section():
     if existing_docs:
         st.write("Existing documents:")
         for doc in existing_docs:
-            st.write(f"- {doc}")
+            col1, col2 = st.columns([3, 1])
+            with col1:
+                st.write(f"- {doc}")
+            with col2:
+                if st.button(f"Remove {doc}", key=f"remove_{doc}"):
+                    if remove_document(doc):
+                        st.success(f"Removed {doc}")
+                        st.experimental_rerun()
+                    else:
+                        st.error(f"Failed to remove {doc}")
     else:
         st.write("No existing documents found.")
 
@@ -111,7 +120,7 @@ def settings_section():
     use_rag = st.checkbox("Use RAG", value=True)
     st.session_state.use_rag = use_rag
 
-    if st.button("Run"):
+    if st.button("Process Documents"):
         if uploaded_files or existing_docs:
             process_and_enable_chat(uploaded_files)
         elif use_rag:
@@ -120,24 +129,16 @@ def settings_section():
             st.success("Chat enabled without RAG.")
             st.session_state.chat_enabled = True
 
+
 def process_and_enable_chat(uploaded_files):
     with st.spinner("Processing documents..."):
         try:
-            num_chunks = process_documents(uploaded_files, rebuild=True)
+            num_chunks = process_documents(uploaded_files)
             st.success(f"Processed {num_chunks} chunks from {len(uploaded_files) + len(get_existing_documents())} documents")
             st.session_state.chat_enabled = True
         except Exception as e:
             logger.error(f"Error processing documents: {str(e)}")
             st.error(f"Error processing documents: {str(e)}")
-            st.warning("Trying to reinitialize the database...")
-            try:
-                clear_vectorstore()
-                num_chunks = process_documents(uploaded_files, rebuild=True)
-                st.success(f"Reinitialized and processed {num_chunks} chunks from {len(uploaded_files)} documents")
-                st.session_state.chat_enabled = True
-            except Exception as e:
-                logger.error(f"Failed to reinitialize the database: {str(e)}")
-                st.error(f"Failed to reinitialize the database: {str(e)}")
 
 def chat_interface():
     st.subheader("Chat Interface")

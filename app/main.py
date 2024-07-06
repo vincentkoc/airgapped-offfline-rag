@@ -2,6 +2,7 @@ import streamlit as st
 import sys
 import os
 import logging
+import time
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
 # Set page config at the very beginning
@@ -53,7 +54,9 @@ def load_models():
     if not model_handler.available_models:
         st.error("No models are available. Please check your configuration and model files.")
     else:
-        st.success(f"Models loaded successfully! Available models: {', '.join(model_handler.available_models)}")
+        alert = st.success(f"Models loaded successfully! Available models: {', '.join(model_handler.available_models)}")
+        time.sleep(2) # Wait
+        alert.empty() # Clear the alert
 
 def main():
     st.title("Document QnA System")
@@ -64,7 +67,7 @@ def main():
     if not st.session_state.models_loaded:
         load_models()
         st.session_state.models_loaded = True
-        st.experimental_set_query_params(reload="true")
+        st.query_params["reload"]="true"
 
 
     if 'chat_enabled' not in st.session_state:

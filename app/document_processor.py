@@ -67,7 +67,11 @@ def process_documents(uploaded_files, rebuild=False):
 
     embeddings = get_embedding_function()
 
-    vectorstore = Chroma.from_documents(texts, embeddings, persist_directory="./chroma_db")
+    vectorstore = Chroma.from_documents(
+        documents=texts,
+        embedding=embeddings,
+        persist_directory="./chroma_db"
+    )
     vectorstore.persist()
 
     return len(texts)

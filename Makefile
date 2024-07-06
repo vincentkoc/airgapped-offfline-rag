@@ -63,6 +63,7 @@ docker-run:
 	@echo "Done."
 
 test:
+	PYTHONPATH=. pytest tests/
 	@echo "Running tests..."
 	@pytest
 	@echo "Done."

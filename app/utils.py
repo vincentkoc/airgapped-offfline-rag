@@ -9,10 +9,17 @@ def load_config():
     with open(CONFIG_PATH, "r") as f:
         config = yaml.safe_load(f)
 
-    # Override config values with environment variables if they exist
-    for key in config:
-        env_value = os.getenv(key.upper())
-        if env_value:
-            config[key] = env_value
+    # Process environment variables and convert numeric values to integers
+    for key, value in config.items():
+        if isinstance(value, str) and value.startswith("${") and value.endswith("}"):
+            env_var = value[2:-1]  # Remove ${ and }
+            default_value = None
+            if ":-" in env_var:
+                env_var, default_value = env_var.split(":-")
+            config[key] = os.getenv(env_var, default_value)
+
+        # Convert numeric values to integers
+        if isinstance(config[key], str) and config[key].isdigit():
+            config[key] = int(config[key])
 
     return config

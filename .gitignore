@@ -438,4 +438,4 @@ report.[0-9]*.[0-9]*.[0-9]*.[0-9]*.json
 chroma_db*
 documents/**
 models/**
-!models/models--qdrant--all-MiniLM-L6-v2-onnx
+!models/models--qdrant--all-MiniLM-L6-v2-onnx**

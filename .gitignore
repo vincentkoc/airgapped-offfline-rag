@@ -176,7 +176,7 @@ jspm_packages/
 .pdm.toml
 
 # Environment
-*.env
+# *.env
 venv/
 *.venv
 .venv/
@@ -433,6 +433,9 @@ celerybeat.pid
 *.lzf
 *.snappy
 report.[0-9]*.[0-9]*.[0-9]*.[0-9]*.json
+
+# Project
 chroma_db*
 models/**
 documents/**
+!models/models--qdrant--all-MiniLM-L6-v2-onnx

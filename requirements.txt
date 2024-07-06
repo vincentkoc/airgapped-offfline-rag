@@ -1,0 +1,23 @@
+# General requirements
+# --------------------
+# python-dotenv
+# click
+# colorama
+# sqlalchemy
+# pydantic
+
+# Database requirements
+# ---------------------
+chromadb==0.4.3
+
+# Web requirements
+# ----------------
+streamlit==1.24.0
+
+# Project requirements
+# --------------------
+llama-cpp-python==0.2.11
+langchain==0.0.267
+sentence-transformers==2.2.2
+pyyaml==6.0
+pypdf==3.12.1

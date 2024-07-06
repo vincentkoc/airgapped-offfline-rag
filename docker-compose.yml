@@ -1,0 +1,13 @@
+version: '3.8'
+
+services:
+  doc-qna:
+    build: .
+    ports:
+      - "8501:8501"
+    volumes:
+      - ./documents:/app/documents
+      - ./models:/app/models
+    environment:
+      - STREAMLIT_SERVER_ADDRESS=0.0.0.0
+      - STREAMLIT_SERVER_PORT=8501

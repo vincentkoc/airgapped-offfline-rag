@@ -2,6 +2,7 @@
 
 # Shell and Environment
 SHELL := /bin/zsh
+.DEFAULT_GOAL := help
 include .env
 export
 
@@ -54,12 +55,18 @@ run:
 
 docker-build:
 	@echo "Building docker image..."
-	@docker build -t diet-rag .
+	@docker build -t doc-qna .
 	@echo "Done."
 
 docker-run:
 	@echo "Running docker image..."
-	@docker run -p 8501:8501 diet-rag
+	@echo "Ignore Streamlit URL, You can access the app at http://localhost:$(DOCKERPORT)\n"
+	@docker run -p $(DOCKERPORT):8501 doc-qna
+	@echo "Done."
+
+docker-compose-buildup:
+	@echo "Running docker-compose..."
+	@docker-compose up --build
 	@echo "Done."
 
 test:
@@ -81,6 +88,7 @@ help:
 	@echo "make run - Run streamlit"
 	@echo "make docker-build - Build docker image"
 	@echo "make docker-run - Run docker image"
+	@echo "make docker-compose-buildup - Run docker-compose"
 	@echo "make test - Run tests"
 
-.PHONY: venv install get set load clean help precommit run docker-build docker-run test
+.PHONY: venv install get set load clean help precommit run docker-build docker-run docker-compose-buildup test

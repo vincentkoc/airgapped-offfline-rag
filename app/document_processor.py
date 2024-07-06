@@ -2,10 +2,17 @@ from langchain.document_loaders import PyPDFLoader
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain.vectorstores import Chroma
 from langchain.embeddings import HuggingFaceEmbeddings
+from fastembed import TextEmbedding
 import os
 from utils import load_config
 
 config = load_config()
+
+def get_embedding_function():
+    if config['use_fast_embed']:
+        return TextEmbedding()
+    else:
+        return HuggingFaceEmbeddings(model_name=config['embedding_model'])
 
 def process_documents(uploaded_files):
     documents = []
@@ -23,7 +30,7 @@ def process_documents(uploaded_files):
     )
     texts = text_splitter.split_documents(documents)
 
-    embeddings = HuggingFaceEmbeddings(model_name=config['embedding_model'])
+    embeddings = get_embedding_function()
     vectorstore = Chroma.from_documents(texts, embeddings, persist_directory="./chroma_db")
     vectorstore.persist()
 

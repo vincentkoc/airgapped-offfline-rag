@@ -1,0 +1,21 @@
+# Ensure shell script uses LF.
+Dockerfile  eol=lf
+*.sh        eol=lf
+
+# Remove unused folders from archive/build.
+bin export-ignore
+venv export-ignore
+reports export-ignore
+.vscode export-ignore
+.github export-ignore
+.circleci export-ignore
+
+# Remove unused files from archive/build.
+README.md export-ignore
+.editorconfig export-ignore
+.pre-commit-config.yaml export-ignore
+.yamllint export-ignore
+.releaserc export-ignore
+.codecov.yml export-ignore
+.dcignore export-ignore
+.dccache export-ignore

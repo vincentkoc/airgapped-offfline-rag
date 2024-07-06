@@ -1,0 +1,11 @@
+# Include all requirements to run the bot.
+-r requirements.txt
+
+# Local development only libraries
+pre-commit
+flake8
+isort
+coverage
+flake8-bugbear
+flake8-builtins
+flake8-local-import

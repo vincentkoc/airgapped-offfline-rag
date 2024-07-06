@@ -47,6 +47,21 @@ precommit:
 	@pre-commit run --all-files
 	@echo "Done."
 
+run:
+	@echo "Running streamlit..."
+	@streamlit run app.py
+	@echo "Done."
+
+docker-build:
+	@echo "Building docker image..."
+	@docker build -t diet-rag .
+	@echo "Done."
+
+docker-run:
+	@echo "Running docker image..."
+	@docker run -p 8501:8501 diet-rag
+	@echo "Done."
+
 # Help
 help:
 	@echo "make venv - Set up virtual environment"
@@ -57,5 +72,8 @@ help:
 	@echo "make clean - Clean up virtual environment"
 	@echo "make help - Show this help"
 	@echo "make precommit - Run pre-commit"
+	@echo "make run - Run streamlit"
+	@echo "make docker-build - Build docker image"
+	@echo "make docker-run - Run docker image"
 
-.PHONY: venv install get set load clean help precommit
+.PHONY: venv install get set load clean help precommit run docker-build docker-run

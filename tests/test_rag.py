@@ -9,21 +9,24 @@ def mock_config():
         'top_k': 3
     }
 
-@patch('app.rag.TextEmbedding')
-def test_get_embedding_function(mock_text_embedding, mock_config):
-    mock_text_embedding.list_supported_models.return_value = ['sentence-transformers/all-MiniLM-L6-v2']
+@patch('app.rag.FastEmbedEmbeddings')
+def test_get_embedding_function(mock_fastembed, mock_config):
     with patch('app.rag.config', mock_config):
         embedding_func = get_embedding_function()
         assert isinstance(embedding_func, MagicMock)
-        mock_text_embedding.assert_called_once_with('sentence-transformers/all-MiniLM-L6-v2')
+        mock_fastembed.assert_called_once_with(
+            model_name='sentence-transformers/all-MiniLM-L6-v2',
+            max_length=512,
+            doc_embed_type="passage"
+        )
 
-@patch('app.rag.Chroma')
+@patch('app.rag.get_vectorstore')
 @patch('app.rag.get_embedding_function')
-def test_retrieve_context(mock_get_embedding, mock_chroma, mock_config):
+def test_retrieve_context(mock_get_embedding, mock_get_vectorstore, mock_config):
     with patch('app.rag.config', mock_config):
-        # Mock Chroma and its methods
+        # Mock vectorstore and its methods
         mock_vectorstore = MagicMock()
-        mock_chroma.return_value = mock_vectorstore
+        mock_get_vectorstore.return_value = mock_vectorstore
         mock_docs = [
             MagicMock(page_content='content1'),
             MagicMock(page_content='content2'),
@@ -36,6 +39,6 @@ def test_retrieve_context(mock_get_embedding, mock_chroma, mock_config):
 
         # Assertions
         mock_get_embedding.assert_called_once()
-        mock_chroma.assert_called_once_with(persist_directory="./chroma_db", embedding_function=mock_get_embedding.return_value)
+        mock_get_vectorstore.assert_called_once()
         mock_vectorstore.similarity_search.assert_called_once_with("test query", k=3)
         assert result == 'content1\ncontent2\ncontent3'

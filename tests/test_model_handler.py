@@ -17,23 +17,25 @@ def model_handler(mock_config):
     return ModelHandler(mock_config)
 
 @patch('app.model_handler.Llama')
-def test_load_llama(mock_llama, model_handler):
+@patch('app.model_handler.torch.cuda.is_available', return_value=False)
+def test_load_llama(mock_cuda, mock_llama, model_handler):
     model_handler.load_llama()
     mock_llama.assert_called_once_with(
         model_path='./models/llama-3-8b.gguf',
         n_ctx=2048,
         n_batch=512,
-        n_gpu_layers=-1
+        n_gpu_layers=0
     )
 
 @patch('app.model_handler.Llama')
-def test_load_mistral(mock_llama, model_handler):
+@patch('app.model_handler.torch.cuda.is_available', return_value=False)
+def test_load_mistral(mock_cuda, mock_llama, model_handler):
     model_handler.load_mistral()
     mock_llama.assert_called_once_with(
         model_path='./models/mistral-7b-v0.1.gguf',
         n_ctx=2048,
         n_batch=512,
-        n_gpu_layers=-1
+        n_gpu_layers=0
     )
 
 @patch('app.model_handler.Llama')

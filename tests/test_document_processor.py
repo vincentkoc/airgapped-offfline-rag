@@ -1,11 +1,11 @@
 import pytest
 from unittest.mock import patch, MagicMock
-from app.document_processor import get_embedding_function
+from app.document_processor import get_embedding_function, process_documents
 
 @patch('app.document_processor.config')
 @patch('app.document_processor.FastEmbedEmbeddings')
 def test_get_embedding_function(mock_fastembed, mock_config):
-    mock_config.get.return_value = 'sentence-transformers/all-MiniLM-L6-v2'
+    mock_config.__getitem__.return_value = 'sentence-transformers/all-MiniLM-L6-v2'
     embedding_func = get_embedding_function()
     assert isinstance(embedding_func, MagicMock)
     mock_fastembed.assert_called_once_with(
@@ -22,7 +22,7 @@ def test_get_embedding_function(mock_fastembed, mock_config):
 @patch('app.document_processor.get_vectorstore')
 @patch('app.document_processor.config')
 def test_process_documents(mock_config, mock_get_vectorstore, mock_splitter, mock_loader, mock_makedirs, mock_exists):
-    mock_config.get.side_effect = lambda key: {'chunk_size': 1000, 'chunk_overlap': 200}.get(key, None)
+    mock_config.__getitem__.side_effect = lambda key: {'chunk_size': 1000, 'chunk_overlap': 200}.get(key, None)
 
     # Mock file and loader
     mock_file = MagicMock()
@@ -38,7 +38,6 @@ def test_process_documents(mock_config, mock_get_vectorstore, mock_splitter, moc
     mock_get_vectorstore.return_value = mock_vectorstore
 
     # Call the function
-    from app.document_processor import process_documents
     result = process_documents([mock_file])
 
     # Assertions

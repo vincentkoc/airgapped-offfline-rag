@@ -7,7 +7,7 @@ import time
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
 # Set page config at the very beginning
-st.set_page_config(layout="wide", page_title="Document QnA System")
+st.set_page_config(layout="wide", page_title="Lightweight Offline Document RAG")
 
 # Add the parent directory to the Python path
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))

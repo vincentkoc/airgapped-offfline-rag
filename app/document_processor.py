@@ -83,21 +83,17 @@ def process_documents(uploaded_files, rebuild=False):
 def get_existing_documents():
     try:
         vectorstore = get_vectorstore()
-        docs = vectorstore.get()
-        stored_docs = set(metadata['source'] for metadata in docs['metadatas'])
+        # Retrieve all documents
+        results = vectorstore.get()
+        # Extract unique source names from the results
+        documents = list(set(metadata['source'] for metadata in results['metadatas']))
 
-        existing_docs = set(f for f in os.listdir(DOCUMENTS_DIR) if f.endswith('.pdf'))
+        # Persist the vectorstore
+        vectorstore.persist()
 
-        docs_to_remove = stored_docs - existing_docs
-        if docs_to_remove:
-            for doc in docs_to_remove:
-                vectorstore.delete(where={"source": doc})
-            vectorstore.persist()
-
-        return list(existing_docs)
+        return documents
     except Exception as e:
-        logger.error(f"Error retrieving existing documents: {str(e)}")
-        st.error(f"Error retrieving existing documents: {str(e)}")
+        logging.error(f"Error retrieving existing documents: {e}")
         return []
 
 def clear_vectorstore():
@@ -115,16 +111,32 @@ def clear_vectorstore():
     return True
 
 def remove_document(document_name):
-    file_path = os.path.join(DOCUMENTS_DIR, document_name)
-    if os.path.exists(file_path):
-        os.remove(file_path)
-        logger.info(f"Removed document: {document_name}")
-
+    try:
         vectorstore = get_vectorstore()
-        vectorstore.delete(where={"source": document_name})
-        vectorstore.persist()
 
-        return True
-    else:
-        logger.warning(f"Document not found: {document_name}")
+        # Check if the document file exists
+        document_path = os.path.join(DOCUMENTS_DIR, document_name)
+        if os.path.exists(document_path):
+            # Remove the document file
+            os.remove(document_path)
+            logging.info(f"Removed file: {document_path}")
+        else:
+            logging.warning(f"Document file not found: {document_path}")
+
+        # Get the ids of the documents to delete from vectorstore
+        results = vectorstore.get(where={"source": document_name})
+        if results and results['ids']:
+            # Delete the documents from vectorstore
+            vectorstore.delete(ids=results['ids'])
+            logging.info(f"Removed {len(results['ids'])} embeddings for document: {document_name}")
+
+            # Persist the changes
+            vectorstore.persist()
+
+            return True
+        else:
+            logging.warning(f"No embeddings found in vectorstore for document: {document_name}")
+            return False
+    except Exception as e:
+        logging.error(f"Error removing document {document_name}: {e}")
         return False

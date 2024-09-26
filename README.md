@@ -1,6 +1,6 @@
 # Diet RAG
 
-## Lightweight Local Document QnA System
+## Lightweight Local Document RAG
 
 This project implements a Retrieval-Augmented Generation (RAG) based Question-Answering system for documents. It uses Llama 3 and Mistral models for local inference, and Streamlit for the user interface.
 

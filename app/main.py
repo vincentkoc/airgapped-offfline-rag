@@ -12,7 +12,7 @@ st.set_page_config(layout="wide", page_title="Document QnA System")
 # Add the parent directory to the Python path
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from app.document_processor import process_documents, get_existing_documents, clear_vectorstore, get_embedding_function
+from app.document_processor import process_documents, get_existing_documents, clear_vectorstore, get_embedding_function, remove_document
 from app.model_handler import ModelHandler
 from app.rag import retrieve_context
 from app.utils import load_config
@@ -40,7 +40,7 @@ def load_models():
             alert.empty() # Clear the alert
 
 def main():
-    st.title("Document QnA System")
+    st.title("Lightweight Offline Document RAG")
 
     # Initialize session state variables
     if 'models_loaded' not in st.session_state:

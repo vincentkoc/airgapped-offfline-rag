@@ -158,31 +158,39 @@ def chat_interface():
     else:
         st.info("Please process documents or disable RAG to start chatting.")
 
+def get_system_prompt():
+    return """You are a helpful AI assistant. Your task is to answer questions based solely on the provided context.
+    If the context doesn't contain enough information to answer the question, say so.
+    Do not use any external knowledge or make assumptions beyond what's given in the context.
+    If asked about your capabilities or identity, refer only to being an AI assistant without mentioning specific models or companies."""
+
 def handle_chat_input():
     if prompt := st.chat_input("What is your question?"):
+        system_prompt = get_system_prompt()
         st.session_state.messages.append({"role": "user", "content": prompt})
         with st.chat_message("user"):
             st.markdown(prompt)
 
         with st.chat_message("assistant"):
+            model_handler = ModelHandler(config)
+            model_choice = st.session_state.model_choice
             message_placeholder = st.empty()
             full_response = ""
 
             if st.session_state.use_rag:
-                context = get_rag_context(prompt)
+                context = retrieve_context(prompt)
+                system_prompt = get_system_prompt()
+                full_prompt = f"{system_prompt}\n\nContext: {context}\n\nHuman: {prompt}\n\nAssistant:"
             else:
-                context = ""
-
-            prompt_template = f"Context: {context}\n\nHuman: {prompt}\n\nAssistant:"
+                full_prompt = prompt
 
             if st.session_state.debug_mode:
                 with st.expander("LLM Prompt"):
-                    st.code(prompt_template)
+                    st.code(full_prompt)
 
             try:
-                model_handler = get_model_handler()
-                for chunk in model_handler.generate_stream(prompt_template, st.session_state.model_choice):
-                    full_response += chunk
+                for response in model_handler.generate_stream(full_prompt, model_choice=model_choice):
+                    full_response += response
                     message_placeholder.markdown(full_response + "▌")
                 message_placeholder.markdown(full_response)
             except Exception as e:

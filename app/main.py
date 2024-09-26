@@ -26,7 +26,9 @@ config = load_config()
 
 @st.cache_resource
 def get_model_handler():
-    return ModelHandler(config)
+    model_handler = ModelHandler(config)
+    # st.write(f"Available models: {model_handler.available_models}")  # Debug info
+    return model_handler
 
 def load_models():
     with st.spinner("Loading models... This may take a few minutes."):
@@ -35,9 +37,10 @@ def load_models():
         if not model_handler.available_models:
             st.error("No models are available. Please check your configuration and model files.")
         else:
+            # st.write(f"Debug: Available models: {model_handler.available_models}")  # More debug info
             alert = st.success(f"Models loaded successfully! Available models: {', '.join(model_handler.available_models)}")
-            time.sleep(2) # Wait
-            alert.empty() # Clear the alert
+            time.sleep(2)
+            alert.empty()
 
 def main():
     st.title("Lightweight Offline Document RAG")
@@ -91,6 +94,7 @@ def settings_section():
         st.write("No existing documents found.")
 
     model_handler = get_model_handler()
+    # st.write(f"Debug: Model handler available models: {model_handler.available_models}")  # Debug info
     if model_handler.available_models:
         model_choice = st.selectbox("Choose a model", model_handler.available_models)
         st.session_state.model_choice = model_choice

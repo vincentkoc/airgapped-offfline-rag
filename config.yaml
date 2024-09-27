@@ -15,5 +15,5 @@ use_fast_embed: ${USE_FAST_EMBED:-true}
 embedding_model: ${EMBEDDING_MODEL:-"sentence-transformers/all-MiniLM-L6-v2"}
 
 # App Settings
-default_model: ${DEFAULT_MODEL:-"mistral"} # or "llama"
+default_model: ${DEFAULT_MODEL:-"mistral"} # or "llama" or "gemma"
 max_input_length: ${MAX_INPUT_LENGTH:-512}

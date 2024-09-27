@@ -6,72 +6,55 @@ import streamlit as st
 class ModelHandler:
     def __init__(self, config):
         self.config = config
-        self.llama_model = None
-        self.mistral_model = None
-        self.gemma_model = None
         self.available_models = []
         self.check_available_models()
 
     def check_available_models(self):
         self.available_models = []
-        if os.path.exists(self.config['llama_model_path']):
-            self.available_models.append("Llama 3")
-        if os.path.exists(self.config['mistral_model_path']):
-            self.available_models.append("Mistral")
-        if os.path.exists(self.config['gemma_model_path']):
-            self.available_models.append("Gemma")
+        model_paths = {
+            "Llama 3": self.config['llama_model_path'],
+            "Mistral": self.config['mistral_model_path'],
+            "Gemma": self.config['gemma_model_path']
+        }
+        for name, path in model_paths.items():
+            if os.path.exists(path):
+                self.available_models.append(name)
         return self.available_models
 
     @st.cache_resource
-    def load_llama(_self):
+    def load_model(_self, model_path):
         return Llama(
-            model_path=_self.config['llama_model_path'],
+            model_path=model_path,
             n_ctx=_self.config['model_n_ctx'],
             n_batch=_self.config['model_n_batch'],
             n_gpu_layers=-1 if torch.cuda.is_available() else 0,
-            f16_kv=True,# if apple metal is available, use f16_kv == true
-            use_mmap=True,# speed up loading model
-            n_gqa=8,# for 4-bit quantization
-        )
-
-    @st.cache_resource
-    def load_mistral(_self):
-        return Llama(
-            model_path=_self.config['mistral_model_path'],
-            n_ctx=_self.config['model_n_ctx'],
-            n_batch=_self.config['model_n_batch'],
-            n_gpu_layers=-1 if torch.cuda.is_available() else 0
-        )
-
-    @st.cache_resource
-    def load_gemma(_self):
-        return Llama(
-            model_path=_self.config['gemma_model_path'],
-            n_ctx=_self.config['model_n_ctx'],
-            n_batch=_self.config['model_n_batch'],
-            n_gpu_layers=-1 if torch.cuda.is_available() else 0
+            f16_kv=True,
+            use_mmap=True,
+            n_gqa=8,
+            verbose=False
         )
 
     def get_model(self, model_choice):
-        if model_choice == "Llama 3":
-            return self.load_llama()
-        elif model_choice == "Mistral":
-            return self.load_mistral()
-        elif model_choice == "Gemma":
-            return self.load_gemma()
-        else:
+        model_paths = {
+            "Llama 3": self.config['llama_model_path'],
+            "Mistral": self.config['mistral_model_path'],
+            "Gemma": self.config['gemma_model_path']
+        }
+        if model_choice not in model_paths:
             raise ValueError(f"Model {model_choice} is not available. Available models: {', '.join(self.available_models)}")
+        return self.load_model(model_paths[model_choice])
 
     def generate_stream(self, prompt, model_choice="Mistral"):
         model = self.get_model(model_choice)
-
-        print(prompt)
 
         for output in model(
             prompt,
             max_tokens=int(self.config['max_input_length']),
             stop=["Human:", "\n"],
             echo=False,
-            stream=True
+            stream=True,
+            temperature=0.7,
+            top_p=0.95,
+            repeat_penalty=1.1
         ):
             yield output['choices'][0]['text']

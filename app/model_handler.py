@@ -8,6 +8,7 @@ class ModelHandler:
         self.config = config
         self.llama_model = None
         self.mistral_model = None
+        self.gemma_model = None
         self.available_models = []
         self.check_available_models()
 
@@ -17,6 +18,8 @@ class ModelHandler:
             self.available_models.append("Llama 3")
         if os.path.exists(self.config['mistral_model_path']):
             self.available_models.append("Mistral")
+        if os.path.exists(self.config['gemma_model_path']):
+            self.available_models.append("Gemma")
         return self.available_models
 
     @st.cache_resource
@@ -37,11 +40,22 @@ class ModelHandler:
             n_gpu_layers=-1 if torch.cuda.is_available() else 0
         )
 
+    @st.cache_resource
+    def load_gemma(_self):
+        return Llama(
+            model_path=_self.config['gemma_model_path'],
+            n_ctx=_self.config['model_n_ctx'],
+            n_batch=_self.config['model_n_batch'],
+            n_gpu_layers=-1 if torch.cuda.is_available() else 0
+        )
+
     def get_model(self, model_choice):
         if model_choice == "Llama 3":
             return self.load_llama()
         elif model_choice == "Mistral":
             return self.load_mistral()
+        elif model_choice == "Gemma":
+            return self.load_gemma()
         else:
             raise ValueError(f"Model {model_choice} is not available. Available models: {', '.join(self.available_models)}")
 

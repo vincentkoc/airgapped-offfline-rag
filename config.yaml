@@ -1,6 +1,7 @@
 # Model Settings
 llama_model_path: ${LLAMA_MODEL_PATH:-"./models/llama-pro-8b-instruct.Q3_K_L.gguf"}
 mistral_model_path: ${MISTRAL_MODEL_PATH:-"./models/mistral-7b-instruct-v0.2.Q3_K_L.gguf"}
+gemma_model_path: ${GEMMA_MODEL_PATH:-"./models/gemma-2-2b-it.q2_k.gguf"}
 model_n_ctx: ${MODEL_N_CTX:-2048}
 model_n_batch: ${MODEL_N_BATCH:-512}
 

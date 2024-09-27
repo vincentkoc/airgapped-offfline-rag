@@ -11,9 +11,7 @@ class ModelHandler:
     def __init__(self, config):
         self.config = config
         self.available_models = []
-        self.loaded_models = {}
         self.check_available_models()
-        self.preload_default_model()
 
     def check_available_models(self):
         self.available_models = []
@@ -30,6 +28,7 @@ class ModelHandler:
     @st.cache_resource
     def load_model(_self, model_path):
         try:
+            quantization = _self._get_quantization_from_filename(model_path)
             return Llama(
                 model_path=model_path,
                 n_ctx=_self.config['model_n_ctx'],
@@ -37,18 +36,41 @@ class ModelHandler:
                 n_gpu_layers=-1 if torch.cuda.is_available() else 0,
                 f16_kv=True,
                 use_mmap=True,
-                n_gqa=8,
-                verbose=False
+                verbose=False,
+                **_self._get_quantization_params(quantization)
             )
         except Exception as e:
             logger.error(f"Error loading model from {model_path}: {str(e)}")
             raise
 
-    def preload_default_model(self):
-        default_model = self.config.get('default_model', 'Mistral')
-        if default_model in self.available_models:
-            logger.info(f"Preloading default model: {default_model}")
-            self.get_model(default_model)
+    def _get_quantization_from_filename(self, filename):
+        filename_lower = filename.lower()
+        if 'q2' in filename_lower:
+            return 'q2'
+        elif 'q3' in filename_lower:
+            return 'q3'
+        elif 'q4' in filename_lower:
+            return 'q4'
+        elif 'q5' in filename_lower:
+            return 'q5'
+        elif 'q6' in filename_lower:
+            return 'q6'
+        elif 'q8' in filename_lower:
+            return 'q8'
+        else:
+            return 'default'
+
+    def _get_quantization_params(self, quantization):
+        params = {
+            'q2': {'n_gqa': 2},
+            'q3': {'n_gqa': 3},
+            'q4': {'n_gqa': 4},
+            'q5': {'n_gqa': 5},
+            'q6': {'n_gqa': 6},
+            'q8': {'n_gqa': 8},
+            'default': {}
+        }
+        return params.get(quantization, {})
 
     def get_model(self, model_choice):
         model_paths = {
@@ -59,10 +81,7 @@ class ModelHandler:
         if model_choice not in model_paths:
             raise ValueError(f"Model {model_choice} is not available. Available models: {', '.join(self.available_models)}")
 
-        if model_choice not in self.loaded_models:
-            self.loaded_models[model_choice] = self.load_model(model_paths[model_choice])
-
-        return self.loaded_models[model_choice]
+        return self.load_model(model_paths[model_choice])
 
     def generate_stream(self, prompt, model_choice="Mistral"):
         model = self.get_model(model_choice)
@@ -97,27 +116,3 @@ class ModelHandler:
         total_time = end_time - start_time
         tokens_per_second = tokens_generated / total_time
         logger.info(f"Generated {tokens_generated} tokens in {total_time:.2f} seconds ({tokens_per_second:.2f} tokens/sec)")
-
-    def batch_generate(self, prompts, model_choice="Mistral"):
-        model = self.get_model(model_choice)
-        results = []
-        start_time = time.time()
-        total_tokens = 0
-
-        for prompt in prompts:
-            max_tokens = self._get_dynamic_max_tokens(prompt)
-            output = model(
-                prompt,
-                max_tokens=max_tokens,
-                stop=["Human:", "\n"],
-                echo=False,
-                temperature=0.7,
-                top_p=0.95,
-                repeat_penalty=1.1
-            )
-            results.append(output['choices'][0]['text'])
-            total_tokens += len(output['choices'][0]['text'].split())
-
-        end_time = time.time()
-        self._log_performance_metrics(start_time, end_time, total_tokens)
-        return results

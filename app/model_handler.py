@@ -28,7 +28,10 @@ class ModelHandler:
             model_path=_self.config['llama_model_path'],
             n_ctx=_self.config['model_n_ctx'],
             n_batch=_self.config['model_n_batch'],
-            n_gpu_layers=-1 if torch.cuda.is_available() else 0
+            n_gpu_layers=-1 if torch.cuda.is_available() else 0,
+            f16_kv=True,# if apple metal is available, use f16_kv == true
+            use_mmap=True,# speed up loading model
+            n_gqa=8,# for 4-bit quantization
         )
 
     @st.cache_resource

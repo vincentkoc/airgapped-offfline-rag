@@ -16,7 +16,7 @@ streamlit==1.36.0
 
 # Project requirements
 # --------------------
-llama-cpp-python==0.2.81
+llama-cpp-python==0.3.0
 langchain==0.2.6
 langchain-community==0.2.6
 sentence-transformers==3.0.1

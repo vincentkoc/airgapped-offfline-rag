@@ -1,8 +1,8 @@
-# Airgapped RAG
+# Offline Airgapped RAG
 
 ## Lightweight Local Document RAG
 
-This project implements a Retrieval-Augmented Generation (RAG) based Question-Answering system for documents. It uses Llama 3, Mistral, and Gemini models for local inference, and Streamlit for the user interface.
+This project implements a Retrieval-Augmented Generation (RAG) based Question-Answering system for documents. It uses Llama 3, Mistral, and Gemini models for local inference with LlaMa c++, langchain for orchestration, chromadb for vector storage, and Streamlit for the user interface.
 
 ## Setup
 

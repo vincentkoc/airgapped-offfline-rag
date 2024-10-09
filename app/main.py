@@ -7,7 +7,45 @@ import time
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
 # Set page config at the very beginning
-st.set_page_config(layout="wide", page_title="Lightweight Offline Document RAG")
+st.set_page_config(
+    layout="wide",
+    page_title="Offline RAG",
+    page_icon="assets/offline_rag_icon.png",
+    initial_sidebar_state="collapsed",
+)
+
+# Custom CSS to inject into the Streamlit app
+st.markdown("""
+<style>
+/* Create a sticky nav bar */
+header .css-1595djv {
+    position: sticky;
+    top: 0;
+    z-index: 999;
+    background-color: #dbff54;
+    color: #000000;
+    padding: 10px 0;
+}
+
+/* Adjust button colors */
+.stButton>button {
+    color: #dbff54;
+    background-color: #000000;
+}
+
+.stButton>button:hover {
+    color: #000000;
+    background-color: #dbff54;
+}
+
+[data-testid="stDecoration"] {
+display: none;
+}
+
+
+</style>
+""", unsafe_allow_html=True)
+
 
 # Add the parent directory to the Python path
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))

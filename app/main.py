@@ -22,26 +22,37 @@ header .css-1595djv {
     position: sticky;
     top: 0;
     z-index: 999;
-    background-color: #dbff54;
-    color: #000000;
+    background-color: #a678b8;
+    color: #ffffff;
     padding: 10px 0;
 }
 
 /* Adjust button colors */
 .stButton>button {
-    color: #dbff54;
-    background-color: #000000;
+    color: #ffffff;
+    background-color: #a678b8;
+    border-radius: 8px;
+    border: none;
+    padding: 10px 20px;
+    font-weight: bold;
+    transition: background-color 0.3s ease;
 }
 
 .stButton>button:hover {
-    color: #000000;
-    background-color: #dbff54;
+    color: #a678b8;
+    background-color: #d3c4e3; /* Softer lavender */
+    border: 1px solid #a678b8;
 }
 
 [data-testid="stDecoration"] {
-display: none;
+    display: none;
 }
 
+/* General text styling */
+body {
+    color: #333333;
+    line-height: 1.6;
+}
 
 </style>
 """, unsafe_allow_html=True)

@@ -441,3 +441,4 @@ models/**
 # !models/models--qdrant--all-MiniLM-L6-v2-onnx**
 !.github
 !.streamlit
+!models/.gitkeep

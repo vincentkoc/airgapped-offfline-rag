@@ -1,0 +1,17 @@
+# Path for this file:
+# ~/.streamlit/config.toml (on Unix)
+# %userprofile%/.streamlit/config.toml (on Windows)
+
+[theme]
+primaryColor = "#f4298a"  # Bright pink
+backgroundColor = "#0a0a0a"  # Dark background
+secondaryBackgroundColor = "#111111"  # Slightly lighter dark for contrast
+textColor = "#e0e0e0"  # Light gray for text
+font = "sans serif"
+
+[server]
+enableCORS = false
+enableXsrfProtection = false
+
+[browser]
+gatherUsageStats = false

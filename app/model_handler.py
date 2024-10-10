@@ -10,21 +10,19 @@ logger = logging.getLogger(__name__)
 class ModelHandler:
     def __init__(self, config):
         self.config = config
-        self.available_models = []
         self.loaded_models = {}
         self.check_available_models()
 
     def check_available_models(self):
         self.available_models = []
         model_paths = {
-            "Llama 3": self.config['llama_model_path'],
-            "Mistral": self.config['mistral_model_path'],
-            "Gemma": self.config['gemma_model_path']
+            "Llama 3": self.config.get('llama_model_path'),
+            "Mistral": self.config.get('mistral_model_path'),
+            "Gemma": self.config.get('gemma_model_path')
         }
-        for name, path in model_paths.items():
-            if os.path.exists(path):
-                self.available_models.append(name)
-        return self.available_models
+        for model_name, path in model_paths.items():
+            if path and os.path.exists(path):
+                self.available_models.append(model_name)
 
     @st.cache_resource
     def load_model(_self, model_path):

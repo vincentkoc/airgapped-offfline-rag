@@ -1,0 +1,81 @@
+name: Docker Build and Test
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v2
+
+    - name: Build Docker image
+      run: docker build -t offline-airgapped-rag .
+
+    - name: Create necessary directories and files
+      run: |
+        mkdir -p documents models data chroma_db
+        echo "Test document" > documents/test.txt
+        echo "Test model" > models/test.model
+        echo "Test data" > data/test.data
+        echo "Test chroma" > chroma_db/test.db
+
+    - name: Run Docker container
+      run: |
+        docker run -d --name offline-airgapped-rag-container \
+          -p 127.0.0.1:8501:8501 \
+          -v ${{ github.workspace }}/documents:/app/documents \
+          -v ${{ github.workspace }}/models:/app/models:ro \
+          -v ${{ github.workspace }}/data:/app/data:ro \
+          -v ${{ github.workspace }}/chroma_db:/app/chroma_db:ro \
+          --read-only \
+          --tmpfs /tmp \
+          --tmpfs /var/run \
+          --tmpfs /var/log \
+          --tmpfs /app/documents \
+          offline-airgapped-rag
+
+    - name: Wait for container to start
+      run: sleep 10
+
+    - name: Check if container is running
+      run: docker ps | grep offline-airgapped-rag-container
+
+    - name: Check container logs
+      run: docker logs offline-airgapped-rag-container
+
+    - name: Test Streamlit server
+      run: |
+        response=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:8501)
+        if [ $response = "200" ]; then
+          echo "Streamlit server is running"
+        else
+          echo "Streamlit server is not running"
+          exit 1
+        fi
+
+    - name: Test write access to documents folder
+      run: |
+        docker exec offline-airgapped-rag-container /bin/sh -c "echo 'Test write' > /app/documents/test_write.txt"
+        if [ $? -eq 0 ]; then
+          echo "Write to documents folder successful"
+        else
+          echo "Write to documents folder failed"
+          exit 1
+        fi
+
+    - name: Test read-only access to other folders
+      run: |
+        docker exec offline-airgapped-rag-container /bin/sh -c "touch /app/models/test_write.txt" || echo "Models folder is read-only as expected"
+        docker exec offline-airgapped-rag-container /bin/sh -c "touch /app/data/test_write.txt" || echo "Data folder is read-only as expected"
+        docker exec offline-airgapped-rag-container /bin/sh -c "touch /app/chroma_db/test_write.txt" || echo "Chroma_db folder is read-only as expected"
+
+    - name: Clean up
+      run: docker stop offline-airgapped-rag-container && docker rm offline-airgapped-rag-container

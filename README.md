@@ -1,14 +1,11 @@
+![Project Logo](assets/airgapped_offline_rag_banner.jpg)
+
 # Offline Airgapped RAG
-
-![Project Logo](path/to/logo.png)
-
-## Lightweight Local Document RAG
 
 This project implements a Retrieval-Augmented Generation (RAG) based Question-Answering system for documents. It uses Llama 3, Mistral, and Gemini models for local inference with LlaMa c++, langchain for orchestration, chromadb for vector storage, and Streamlit for the user interface.
 
 ## Table of Contents
 - [Offline Airgapped RAG](#offline-airgapped-rag)
-  - [Lightweight Local Document RAG](#lightweight-local-document-rag)
   - [Table of Contents](#table-of-contents)
   - [Setup](#setup)
   - [Running the Application](#running-the-application)
@@ -87,6 +84,10 @@ Adjust settings in `config.yaml` to modify model paths, chunk sizes, and other p
 
 ### Future Features
 - [ ] Integration with additional models (coming soon)
+- [ ] Support non-PDF documents (coming soon)
+- [ ] Support for image documents (coming soon)
+- [ ] Support for visualizing embeddings (coming soon)
+- [ ] Support for chat history (coming soon)
 - [ ] Enhanced user interface (coming soon)
 - [ ] Support for multi-modal documents (coming soon)
 - [ ] Exporting and importing RAG configurations (coming soon)

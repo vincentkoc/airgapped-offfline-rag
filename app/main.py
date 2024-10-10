@@ -404,7 +404,7 @@ def main():
         """
         <div class="footer">
             © 2023-2024 Airgaped Offline Local Document RAG by <a href="https://x.com/vincent_koc" target="_blank">Vincent Koc</a> |
-            <a href="https://github.com/vincentkoc/airgapped-offline-local-rag" target="_blank">
+            <a href="https://github.com/vincentkoc/airgapped-offfline-rag" target="_blank">
                 Open Source on GitHub <img src="https://github.com/fluidicon.png" class="github-icon">
             </a>
         </div>

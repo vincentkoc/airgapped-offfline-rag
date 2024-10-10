@@ -41,14 +41,10 @@ st.markdown("""
 
 /* Footer styling */
 .footer {
-    position: fixed;
-    left: 0;
-    bottom: 0;
-    width: 100%;
-    background-color: #f0f0f0;
+    margin-top: 2rem;
+    padding-top: 1rem;
+    border-top: 1px solid #e0e0e0;
     color: #666;
-    text-align: center;
-    padding: 10px 0;
     font-size: 0.8rem;
 }
 
@@ -268,7 +264,7 @@ def settings_section():
 
         if 'processing_result' in st.session_state:
             st.markdown(st.session_state.processing_result, unsafe_allow_html=True)
-            if 'processing_logs' in st.session_state:
+            if st.session_state.debug_mode and 'processing_logs' in st.session_state:
                 with st.expander("Processing Logs"):
                     st.markdown(f'<div class="processing-logs">{st.session_state.processing_logs}</div>', unsafe_allow_html=True)
 
@@ -290,7 +286,8 @@ def process_and_enable_chat(uploaded_files):
             else:
                 st.session_state.processing_result = '<div class="stAlert info">No new documents to process.</div>'
 
-            st.session_state.processing_logs = log_contents
+            if st.session_state.debug_mode:
+                st.session_state.processing_logs = log_contents
             st.session_state.chat_enabled = True
         except Exception as e:
             logger.error(f"Error processing documents: {str(e)}")

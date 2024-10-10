@@ -2,7 +2,7 @@
 
 # Airgapped Offline RAG
 
-This project implements a Retrieval-Augmented Generation (RAG) based Question-Answering system for documents. It uses Llama 3, Mistral, and Gemini models for local inference with LlaMa c++, langchain for orchestration, chromadb for vector storage, and Streamlit for the user interface.
+This project by [Vincent Koc](https://github.com/vincentkoc) implements a Retrieval-Augmented Generation (RAG) based Question-Answering system for documents. It uses Llama 3, Mistral, and Gemini models for local inference with LlaMa c++, langchain for orchestration, chromadb for vector storage, and Streamlit for the user interface.
 
 ![screenshot airgapped_offline_rag-screenshot.png](assets/airgapped_offline_rag-screenshot.png)
 

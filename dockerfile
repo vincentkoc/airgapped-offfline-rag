@@ -1,5 +1,5 @@
 # Use a multi-stage build for better compatibility
-FROM python:3.9-slim AS builder
+FROM python:3.13-slim AS builder
 
 # Install system dependencies
 RUN apt-get update && apt-get install -y \
@@ -26,7 +26,7 @@ RUN if [ -z "$(ls -A models)" ]; then \
     fi
 
 # Create final image
-FROM python:3.9-slim
+FROM python:3.13-slim
 
 # Install libgomp1
 RUN apt-get update && apt-get install -y \

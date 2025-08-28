@@ -1,5 +1,5 @@
 default_language_version:
-    python: python3.9
+    python: python3.13
 repos:
     # Security
     - repo: https://github.com/zricethezav/gitleaks
@@ -46,7 +46,7 @@ repos:
       rev: v2.38.0
       hooks:
           - id: pyupgrade
-            args: [--py3-plus, --py38-plus]
+            args: [--py3-plus, --py313-plus]
     - repo: https://github.com/psf/black
       rev: 22.8.0
       hooks:

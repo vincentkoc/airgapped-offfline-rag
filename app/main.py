@@ -302,7 +302,7 @@ def load_models():
         model_handler = get_model_handler()
 
         if not model_handler.available_models:
-            st.error("No models are available. Please check your configuration and model files.")
+            st.warning("🤖 No AI models detected! Download GGUF model files and place them in the `models/` directory. 📖 [Setup guide](https://github.com/vincentkoc/airgapped-offfline-rag#model-setup)")
         else:
             # st.write(f"Debug: Available models: {model_handler.available_models}")  # More debug info
             alert = st.success(f"Models loaded successfully! Available models: {', '.join(model_handler.available_models)}")
@@ -403,7 +403,7 @@ def main():
     st.markdown(
         """
         <div class="footer">
-            © 2023-2024 Airgaped Offline Local Document RAG by <a href="https://x.com/vincent_koc" target="_blank">Vincent Koc</a> |
+            © 2023-2025 Airgapped Offline Local Document RAG by <a href="https://x.com/vincent_koc" target="_blank">Vincent Koc</a> |
             <a href="https://github.com/vincentkoc/airgapped-offfline-rag" target="_blank">
                 Open Source on GitHub <img src="https://github.com/fluidicon.png" class="github-icon">
             </a>
@@ -430,7 +430,7 @@ def settings_section():
                         if st.button(f"Remove", key=f"remove_{doc}"):
                             if remove_document(doc):
                                 st.success(f"Removed {doc}")
-                                st.experimental_rerun()
+                                st.rerun()
                             else:
                                 st.error(f"Failed to remove {doc}")
         else:
@@ -441,7 +441,6 @@ def settings_section():
             model_choice = st.selectbox("Choose a model", model_handler.available_models)
             st.session_state.model_choice = model_choice
         else:
-            st.error("No models available. Please check your configuration and model files.")
             return
 
         col1, col2, col3 = st.columns([1, 1, 1])
@@ -472,13 +471,14 @@ def process_and_enable_chat(uploaded_files):
             log_handler = logging.StreamHandler(log_capture)
             logger.addHandler(log_handler)
 
-            num_chunks = process_documents(uploaded_files)
+            result = process_documents(uploaded_files)
+            num_chunks, file_info = result
 
             logger.removeHandler(log_handler)
             log_contents = log_capture.getvalue()
 
             if num_chunks > 0:
-                st.session_state.processing_result = f'<div class="stAlert success">Processed {num_chunks} chunks from {len(uploaded_files)} documents</div>'
+                st.session_state.processing_result = f'<div class="stAlert success">Processed {num_chunks} chunks from {len(file_info)} documents</div>'
                 st.session_state.chat_enabled = True
             else:
                 st.session_state.processing_result = '<div class="stAlert info fade-out">No new documents to process.</div>'

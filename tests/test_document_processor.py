@@ -32,23 +32,25 @@ def test_get_embedding_function(mock_fastembed, mock_config):
         cache_dir="./models"
     )
 
-@patch('app.document_processor.os.path.exists', return_value=False)
-@patch('app.document_processor.os.makedirs')
-@patch('app.document_processor.PyPDFLoader')
-@patch('app.document_processor.RecursiveCharacterTextSplitter')
+@patch('app.document_processor.process_single_document')
 @patch('app.document_processor.get_vectorstore')
 @patch('app.document_processor.config')
-def test_process_documents(mock_config, mock_get_vectorstore, mock_splitter, mock_loader, mock_makedirs, mock_exists):
+def test_process_documents(mock_config, mock_get_vectorstore, mock_process_single):
     mock_config.__getitem__.side_effect = lambda key: {'chunk_size': 1000, 'chunk_overlap': 200}.get(key, None)
 
-    # Mock file and loader
+    # Mock file
     mock_file = MagicMock()
     mock_file.name = 'test.pdf'
     mock_file.getvalue.return_value = b'mock pdf content'
-    mock_loader.return_value.load.return_value = [MagicMock(metadata={})] * 2  # Two pages with metadata
-
-    # Mock text splitter
-    mock_splitter.return_value.split_documents.return_value = ['chunk1', 'chunk2', 'chunk3']
+    
+    # Mock document processing to return 3 chunks
+    from app.document_handlers.base import DocumentChunk
+    mock_chunks = [
+        DocumentChunk(content="chunk1", metadata={"source": "test.pdf"}),
+        DocumentChunk(content="chunk2", metadata={"source": "test.pdf"}), 
+        DocumentChunk(content="chunk3", metadata={"source": "test.pdf"})
+    ]
+    mock_process_single.return_value = mock_chunks
 
     # Mock Chroma
     mock_vectorstore = MagicMock()
@@ -58,9 +60,11 @@ def test_process_documents(mock_config, mock_get_vectorstore, mock_splitter, moc
     result = process_documents([mock_file])
 
     # Assertions
-    assert result == 3  # Number of chunks
-    mock_loader.assert_called_once()
-    mock_splitter.assert_called_once_with(chunk_size=1000, chunk_overlap=200)
+    assert result[0] == 3  # Number of chunks (first element of tuple)
+    assert len(result[1]) == 1  # One file processed
+    assert result[1][0]['name'] == 'test.pdf'
+    assert result[1][0]['chunks'] == 3
+    mock_process_single.assert_called_once()
     mock_get_vectorstore.assert_called_once()
     mock_vectorstore.add_documents.assert_called_once()
     mock_vectorstore.persist.assert_called_once()

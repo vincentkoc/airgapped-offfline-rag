@@ -58,4 +58,4 @@ def test_retrieve_context(mock_get_embedding, mock_get_vectorstore, mock_config)
         mock_get_embedding.assert_called_once()
         mock_get_vectorstore.assert_called_once()
         mock_vectorstore.similarity_search.assert_called_once_with("test query", k=3)
-        assert result == 'content1\ncontent2\ncontent3'
+        assert result == 'content1\n\ncontent2\n\ncontent3'

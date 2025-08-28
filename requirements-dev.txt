@@ -1,12 +1,26 @@
-# Include all requirements to run the bot.
+# Include base requirements
 -r requirements.txt
 
-# Local development only libraries
-pytest
-pre-commit
-flake8
-isort
-coverage
-flake8-bugbear
-flake8-builtins
-flake8-local-import
+# Development requirements
+# ------------------------
+pytest==8.3.4
+pytest-cov==6.0.0
+pytest-asyncio==0.25.0
+pytest-mock==3.14.0
+black==24.10.0
+flake8==7.1.1
+flake8-bugbear==24.12.12
+flake8-bandit==4.1.1
+flake8-builtins==2.5.0
+flake8-local-import==1.0.6
+pre-commit==4.0.1
+mypy==1.14.0
+ruff==0.8.6
+ipython==8.31.0
+jupyter==1.1.1
+notebook==7.3.2
+
+# Type stubs
+types-PyYAML==6.0.12.20240917
+types-requests==2.32.0.20241016
+types-Pillow==10.2.0.20241213

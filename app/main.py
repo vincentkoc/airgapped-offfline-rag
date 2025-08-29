@@ -248,9 +248,83 @@ body {
     background-color: #111;
 }
 
+/* Chat input styling - make it always visible */
+.stChatInput > div {
+    border: 2px solid #f4298a !important;
+    background-color: #222 !important;
+    border-radius: 10px !important;
+}
+
+.stChatInput > div > div {
+    border: none !important;
+    background-color: transparent !important;
+}
+
+.stChatInput > div > div > textarea {
+    background-color: transparent !important;
+    color: #e0e0e0 !important;
+    border: none !important;
+}
+
+.stChatInput > div > div > textarea::placeholder {
+    color: #888 !important;
+}
+
+/* Alternative selectors for chat input */
+div[data-testid="stChatInput"] {
+    border: 2px solid #f4298a !important;
+    background-color: #222 !important;
+    border-radius: 10px !important;
+}
+
+div[data-testid="stChatInput"] > div {
+    border: none !important;
+    background-color: transparent !important;
+}
+
+div[data-testid="stChatInput"] textarea {
+    background-color: transparent !important;
+    color: #e0e0e0 !important;
+    border: none !important;
+}
+
 /* Remove border from chat interface message */
 .chat-container > div:first-child {
     border: none !important;
+}
+
+/* Better typing cursor animation */
+@keyframes blink {
+    0% { opacity: 1; }
+    50% { opacity: 1; }
+    51% { opacity: 0; }
+    100% { opacity: 0; }
+}
+
+.typing-cursor {
+    color: #f4298a;
+    animation: blink 0.8s infinite;
+    font-weight: bold;
+}
+
+/* Thinking dots animation */
+@keyframes dots {
+    0% { content: ''; }
+    25% { content: '.'; }
+    50% { content: '..'; }
+    75% { content: '...'; }
+    100% { content: ''; }
+}
+
+.thinking-dots {
+    color: #f4298a;
+    font-style: italic;
+}
+
+.thinking-dots .dots::after {
+    content: '';
+    animation: dots 1.2s infinite;
+}
     background-color: transparent !important;
 }
 
@@ -515,7 +589,7 @@ def chat_interface():
                 if st.session_state.use_rag:
                     context = retrieve_context(prompt)
                     system_prompt = get_system_prompt()
-                    full_prompt = f"{system_prompt}\n\nContext: {context}\n\nHuman: {prompt}\n\nAssistant:"
+                    full_prompt = f"{system_prompt}\n\nContext: {context}\n\nQuestion: {prompt}\n\nAnswer:"
                 else:
                     full_prompt = prompt
 
@@ -524,14 +598,25 @@ def chat_interface():
                         st.code(full_prompt)
 
                 try:
+                    # Show initial typing animation
+                    message_placeholder.markdown('<span class="thinking-dots">Thinking<span class="dots"></span></span>', unsafe_allow_html=True)
+                    
+                    # Stream the response
+                    response_started = False
                     for response in model_handler.generate_stream(full_prompt, model_choice=model_choice):
+                        if not response_started:
+                            response_started = True
                         full_response += response
-                        message_placeholder.markdown(full_response + "▌")
+                        # Show response with animated cursor
+                        message_placeholder.markdown(f'{full_response}<span class="typing-cursor">|</span>', unsafe_allow_html=True)
+                    
+                    # Show final response without cursor
                     message_placeholder.markdown(full_response)
                 except Exception as e:
                     logger.error(f"Error generating response: {str(e)}")
                     st.error(f"Error generating response: {str(e)}")
                     full_response = "I apologize, but I encountered an error while generating the response."
+                    message_placeholder.markdown(full_response)
 
             st.session_state.messages.append({"role": "assistant", "content": full_response})
 

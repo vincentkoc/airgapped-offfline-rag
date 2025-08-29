@@ -325,6 +325,27 @@ div[data-testid="stChatInput"] textarea {
     content: '';
     animation: dots 1.2s infinite;
 }
+
+/* Collapsible layout styling */
+.settings-column {
+    padding-right: 10px;
+}
+
+.chat-column {
+    padding-left: 10px;
+}
+
+.chat-fullwidth {
+    max-width: 100%;
+    padding: 0 20px;
+}
+
+/* Settings hide button */
+.hide-settings-btn {
+    margin-top: 10px;
+    text-align: right;
+}
+
     background-color: transparent !important;
 }
 
@@ -470,7 +491,24 @@ def main():
     with col2:
         with st.container():
             st.markdown('<div class="chat-column">', unsafe_allow_html=True)
-            chat_interface()
+            
+            # Add tabs within the chat column for Chat and Visualization
+            if st.session_state.chat_enabled:
+                chat_tab, viz_tab = st.tabs(["💬 Chat", "📊 Visualization"])
+                
+                with chat_tab:
+                    chat_interface()
+                
+                with viz_tab:
+                    try:
+                        from app.visualization import create_embedding_visualization
+                        create_embedding_visualization()
+                    except ImportError as e:
+                        st.error(f"Visualization module not available: {e}")
+                        st.info("Please ensure umap-learn and scikit-learn are installed")
+            else:
+                chat_interface()
+                
             st.markdown('</div>', unsafe_allow_html=True)
 
     # Footer
@@ -537,6 +575,7 @@ def settings_section():
             if st.session_state.debug_mode and 'processing_logs' in st.session_state:
                 with st.expander("Processing Logs"):
                     st.markdown(f'<div class="processing-logs">{st.session_state.processing_logs}</div>', unsafe_allow_html=True)
+        
 
 def process_and_enable_chat(uploaded_files):
     with st.spinner("Processing documents..."):
@@ -552,8 +591,10 @@ def process_and_enable_chat(uploaded_files):
             log_contents = log_capture.getvalue()
 
             if num_chunks > 0:
-                st.session_state.processing_result = f'<div class="stAlert success">Processed {num_chunks} chunks from {len(file_info)} documents</div>'
+                st.session_state.processing_result = f'<div class="stAlert success">✅ Processed {num_chunks} chunks from {len(file_info)} documents<br>🚀 Ready to chat!</div>'
                 st.session_state.chat_enabled = True
+                # Auto-switch to Chat tab after successful processing
+                st.session_state.auto_switch_to_chat = True
             else:
                 st.session_state.processing_result = '<div class="stAlert info fade-out">No new documents to process.</div>'
 

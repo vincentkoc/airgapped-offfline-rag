@@ -164,33 +164,34 @@ class DoclingHandler(BaseDocumentHandler):
                 "processor": "docling"
             })
             
-            # Try to extract structured elements
+            # Try to extract structured elements from document texts and other content
             try:
-                # Get document structure if available
-                if hasattr(document, 'body') and document.body:
-                    for element_idx, element in enumerate(document.body):
+                # Process text items directly from document.texts
+                if hasattr(document, 'texts') and document.texts:
+                    for element_idx, text_item in enumerate(document.texts):
                         element_text = ""
                         element_type = "text"
                         element_metadata = base_metadata.copy()
                         
-                        # Extract text and type from element
-                        if hasattr(element, 'text'):
-                            element_text = element.text
-                        elif hasattr(element, 'content'):
-                            element_text = element.content
+                        # Extract text content using .text attribute
+                        if hasattr(text_item, 'text') and text_item.text:
+                            element_text = text_item.text.strip()
                         else:
-                            element_text = str(element)
+                            continue  # Skip items without text content
                         
-                        # Determine element type
-                        if hasattr(element, 'element_type'):
-                            element_type = element.element_type
-                        elif hasattr(element, 'type'):
-                            element_type = element.type
+                        # Skip empty or near-empty text
+                        if len(element_text) < 5:
+                            continue
+                        
+                        # Determine element type from label
+                        if hasattr(text_item, 'label') and text_item.label:
+                            element_type = str(text_item.label).lower().replace('docitemlabel.', '')
                         
                         # Add element-specific metadata
                         element_metadata.update({
                             "element_index": element_idx,
-                            "element_type": element_type
+                            "element_type": element_type,
+                            "content_layer": str(text_item.content_layer) if hasattr(text_item, 'content_layer') else None
                         })
                         
                         # Handle different element types
@@ -199,7 +200,7 @@ class DoclingHandler(BaseDocumentHandler):
                             chunk = DocumentChunk(
                                 content=element_text,
                                 metadata=element_metadata,
-                                chunk_id=f"element_{element_idx}_{element_type}",
+                                chunk_id=f"text_{element_idx}_{element_type}",
                                 chunk_type=element_type
                             )
                             chunks.append(chunk)
@@ -209,7 +210,7 @@ class DoclingHandler(BaseDocumentHandler):
                                 chunk = DocumentChunk(
                                     content=element_text,
                                     metadata=element_metadata,
-                                    chunk_id=f"element_{element_idx}",
+                                    chunk_id=f"text_{element_idx}",
                                     chunk_type=element_type
                                 )
                                 chunks.append(chunk)
@@ -229,7 +230,7 @@ class DoclingHandler(BaseDocumentHandler):
                                     chunk = DocumentChunk(
                                         content=chunk_text,
                                         metadata=chunk_metadata,
-                                        chunk_id=f"element_{element_idx}_chunk_{chunk_idx}",
+                                        chunk_id=f"text_{element_idx}_chunk_{chunk_idx}",
                                         chunk_type=element_type
                                     )
                                     chunks.append(chunk)

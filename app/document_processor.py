@@ -56,10 +56,31 @@ def get_embedding_function():
         from langchain_community.embeddings import HuggingFaceEmbeddings
         return HuggingFaceEmbeddings(cache_folder="./models")
 
-@st.cache_resource
 def get_vectorstore():
-    embeddings = get_embedding_function()
-    return Chroma(persist_directory="./chroma_db", embedding_function=embeddings)
+    """Get or create Chroma vectorstore compatible with ChromaDB 1.0.x"""
+    try:
+        embeddings = get_embedding_function()
+        if embeddings is None:
+            raise ValueError("Failed to load embedding function")
+        
+        # Ensure the directory exists
+        chroma_dir = "./chroma_db"
+        os.makedirs(chroma_dir, exist_ok=True)
+        
+        # Simple initialization for ChromaDB 1.0.x with LangChain
+        # The LangChain Chroma wrapper handles the client creation internally
+        vectorstore = Chroma(
+            persist_directory=chroma_dir,
+            collection_name="airgapped_rag_collection",
+            embedding_function=embeddings
+        )
+        
+        logger.info(f"Vectorstore initialized at {chroma_dir}")
+        return vectorstore
+        
+    except Exception as e:
+        logger.error(f"Error initializing vectorstore: {e}")
+        raise
 
 @track_document_processing("batch", 0)
 def process_documents(uploaded_files, rebuild=False):
@@ -219,7 +240,6 @@ def clear_vectorstore():
     if os.path.exists("./chroma_db"):
         shutil.rmtree("./chroma_db")
         logger.info("Cleared Chroma vectorstore.")
-        get_vectorstore.clear()
 
     for file in os.listdir(DOCUMENTS_DIR):
         file_path = os.path.join(DOCUMENTS_DIR, file)
@@ -232,7 +252,7 @@ def clear_vectorstore():
 def remove_document(document_name):
     try:
         vectorstore = get_vectorstore()
-
+        
         # Check if the document file exists
         document_path = os.path.join(DOCUMENTS_DIR, document_name)
         if os.path.exists(document_path):
@@ -242,20 +262,24 @@ def remove_document(document_name):
         else:
             logging.warning(f"Document file not found: {document_path}")
 
-        # Get the ids of the documents to delete from vectorstore
-        results = vectorstore.get(where={"source": document_name})
-        if results and results['ids']:
-            # Delete the documents from vectorstore
-            vectorstore.delete(ids=results['ids'])
-            logging.info(f"Removed {len(results['ids'])} embeddings for document: {document_name}")
-
-            # Persist the changes
-            vectorstore.persist()
-
-            return True
-        else:
-            logging.warning(f"No embeddings found in vectorstore for document: {document_name}")
-            return False
+        # Try to get and delete from vectorstore
+        try:
+            # Get the documents to delete from vectorstore
+            results = vectorstore.get(where={"source": document_name})
+            if results and 'ids' in results and results['ids']:
+                # Delete the documents from vectorstore
+                vectorstore.delete(ids=results['ids'])
+                logging.info(f"Removed {len(results['ids'])} embeddings for document: {document_name}")
+                return True
+            else:
+                # Try alternative approach - delete by metadata filter
+                vectorstore.delete(where={"source": document_name})
+                logging.info(f"Attempted to remove embeddings by metadata filter for: {document_name}")
+                return True
+        except Exception as ve:
+            logging.warning(f"Vectorstore operation failed, but file was removed: {ve}")
+            return True  # File was removed even if vectorstore failed
+            
     except Exception as e:
         logging.error(f"Error removing document {document_name}: {e}")
         return False

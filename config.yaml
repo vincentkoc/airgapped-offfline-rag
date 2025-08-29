@@ -1,7 +1,10 @@
 # Model Settings
 llama_model_path: ${LLAMA_MODEL_PATH:-"./models/llama-pro-8b-instruct.Q3_K_L.gguf"}
 mistral_model_path: ${MISTRAL_MODEL_PATH:-"./models/mistral-7b-instruct-v0.2.Q3_K_L.gguf"}
-gemma_model_path: ${GEMMA_MODEL_PATH:-"./models/gemma-2-2b-it.q2_k.gguf"}
+gemma_model_path: ${GEMMA_MODEL_PATH:-"./models/gemma-3-270m-it-Q2_K_L.gguf"}
+deepseek_model_path: ${DEEPSEEK_MODEL_PATH:-"./models/deepseek-r1-7b.Q3_K_L.gguf"}
+phi_model_path: ${PHI_MODEL_PATH:-"./models/phi-4-14b.Q3_K_L.gguf"}
+qwen_model_path: ${QWEN_MODEL_PATH:-"./models/qwen2.5-7b.Q3_K_L.gguf"}
 model_n_ctx: ${MODEL_N_CTX:-2048}
 model_n_batch: ${MODEL_N_BATCH:-512}
 

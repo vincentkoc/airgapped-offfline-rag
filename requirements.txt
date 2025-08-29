@@ -1,61 +1,61 @@
 # General requirements
 # --------------------
-# python-dotenv
-# click
-# colorama
-# sqlalchemy
-# pydantic
+python-dotenv==1.1.1
+click==8.2.1
+colorama==0.4.6
+SQLAlchemy==2.0.43
+pydantic==2.11.7
 
 # Database requirements
 # ---------------------
-chromadb==0.5.23
+chromadb==1.0.20
 
 # Web requirements
 # ----------------
-streamlit==1.41.1
+streamlit==1.49.0
 
 # Project requirements
 # --------------------
 llama-cpp-python==0.3.16
-langchain==0.3.14
-langchain-community==0.3.14
-sentence-transformers==3.3.1
-pyyaml==6.0.2
-pypdf==5.1.0
-tokenizers==0.21.0
-transformers==4.47.1
+langchain==0.3.27
+langchain-community==0.3.29
+sentence-transformers==5.1.0
+PyYAML==6.0.2
+pypdf==6.0.0
+tokenizers==0.21.4
+transformers==4.55.4
 fastembed==0.7.2
-onnx==1.17.0
-onnxruntime==1.20.1
-huggingface-hub==0.27.0
+onnx==1.19.0
+onnxruntime==1.22.1
+huggingface-hub==0.34.4
 
 # Observability
 # -----------------------
-opik==1.6.1
+opik==1.8.36
 
 # Document Processing
 # -----------------------------
-docling==2.14.0
-python-docx==1.1.2
+docling==2.48.0
+python-docx==1.2.0
 openpyxl==3.1.5
 python-pptx==1.0.2
-markdown==3.7
-beautifulsoup4==4.12.3
-ebooklib==0.18
-Pillow==11.0.0
+Markdown==3.8.2
+beautifulsoup4==4.13.5
+EbookLib==0.19
+pillow==11.3.0
 pytesseract==0.3.13
 chardet==5.2.0
 
 # API Support
 # ---------------------
-fastapi==0.115.6
-uvicorn[standard]==0.34.0
-fastmcp==0.5.9
-websockets==14.1
-python-multipart==0.0.19
+fastapi==0.116.1
+uvicorn[standard]==0.35.0
+fastmcp==2.11.3
+websockets==15.0.1
+python-multipart==0.0.20
 
 # Visualization
 # -----------------------
-plotly==5.24.1
-umap-learn==0.5.7
-scikit-learn==1.6.0
+plotly==6.3.0
+umap-learn==0.5.9.post2
+scikit-learn==1.7.1

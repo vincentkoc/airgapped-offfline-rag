@@ -46,6 +46,11 @@ pillow==11.3.0
 pytesseract==0.3.13
 chardet==5.2.0
 
+# Visualization dependencies
+# ---------------------
+umap-learn==0.5.8
+scikit-learn==1.6.1
+
 # API Support
 # ---------------------
 fastapi==0.116.1

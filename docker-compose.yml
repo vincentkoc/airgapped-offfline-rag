@@ -9,13 +9,17 @@ services:
       - ./documents:/app/documents
       - ./models:/app/models:ro
       - ./data:/app/data:ro
-      - ./chroma_db:/app/chroma_db:ro
+      - ./chroma_db:/app/chroma_db:ro # Cannot write 
+      - ./cache:/app/cache #Links host ./cache to container /app/cache
     environment:
       - STREAMLIT_SERVER_ADDRESS=0.0.0.0
       - STREAMLIT_SERVER_PORT=8501
+      - HF_HOME=/app/cache # Hugging Face Libraries cache app/cache
+      - TRANSFORMERS_CACHE=/app/cache # Transformers Libraries cache /app/cache
+      - SENTENCE_TRANSFORMERS_HOME=/app/cache # FastEmbed/Sentence Transformers caches models /app/cache
     networks:
       - app_network
-    read_only: true
+    read_only: true # Cannot write
     security_opt:
       - no-new-privileges:true
     cap_drop:
@@ -26,7 +30,7 @@ services:
       - /tmp
       - /var/run
       - /var/log
-      - /app/documents
+      # For persistent storage remove this? - /app/documents
     restart: unless-stopped
 
 networks:

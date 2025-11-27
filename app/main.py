@@ -415,8 +415,10 @@ def main():
 def settings_section():
     with st.container():
         st.subheader("Settings")
+        
+# Edit File Uploader to accept multiple file types
 
-        uploaded_files = st.file_uploader("Upload PDF documents", accept_multiple_files=True, type=['pdf'])
+        uploaded_files = st.file_uploader("Upload documents (PDF, TXT, CSV, DOCX)", accept_multiple_files=True, type=['pdf', 'txt', 'csv', 'docx'])
 
         existing_docs = get_existing_documents()
         if existing_docs:
@@ -430,6 +432,8 @@ def settings_section():
                         if st.button(f"Remove", key=f"remove_{doc}"):
                             if remove_document(doc):
                                 st.success(f"Removed {doc}")
+                                # Vectorstore clear - clear cached vectorstore to reflect removal
+                                get_vectorstore.clear()
                                 st.experimental_rerun()
                             else:
                                 st.error(f"Failed to remove {doc}")
@@ -509,13 +513,17 @@ def chat_interface():
             with st.chat_message("assistant"):
                 message_placeholder = st.empty()
                 full_response = ""
-                model_handler = ModelHandler(config)
+                model_handler = get_model_handler()
                 model_choice = st.session_state.model_choice
 
                 if st.session_state.use_rag:
                     context = retrieve_context(prompt)
                     system_prompt = get_system_prompt()
-                    full_prompt = f"{system_prompt}\n\nContext: {context}\n\nHuman: {prompt}\n\nAssistant:"
+                    # Use Mistral's instruction format for better performance
+                    if model_choice == "Mistral":
+                        full_prompt = f"<s>[INST] {system_prompt}\n\nContext: {context}\n\n{prompt} [/INST]"
+                    else:
+                        full_prompt = f"{system_prompt}\n\nContext: {context}\n\nHuman: {prompt}\n\nAssistant:"
                 else:
                     full_prompt = prompt
 

@@ -2,7 +2,8 @@
 llama_model_path: ${LLAMA_MODEL_PATH:-"./models/llama-pro-8b-instruct.Q3_K_L.gguf"}
 mistral_model_path: ${MISTRAL_MODEL_PATH:-"./models/mistral-7b-instruct-v0.2.Q3_K_L.gguf"}
 gemma_model_path: ${GEMMA_MODEL_PATH:-"./models/gemma-2-2b-it.q2_k.gguf"}
-model_n_ctx: ${MODEL_N_CTX:-2048}
+# Context window size changed from 2048 to 8192 to handle RAG prompts
+model_n_ctx: ${MODEL_N_CTX:-8192}
 model_n_batch: ${MODEL_N_BATCH:-512}
 
 # RAG Settings
@@ -15,5 +16,5 @@ use_fast_embed: ${USE_FAST_EMBED:-true}
 embedding_model: ${EMBEDDING_MODEL:-"sentence-transformers/all-MiniLM-L6-v2"}
 
 # App Settings
-default_model: ${DEFAULT_MODEL:-"mistral"} # or "llama" or "gemma"
+default_model: ${DEFAULT_MODEL:-"gemma"} # or "llama" or "mistral"
 max_input_length: ${MAX_INPUT_LENGTH:-512}
